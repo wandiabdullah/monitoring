@@ -2,13 +2,51 @@
 
 Agent untuk monitoring server Linux yang mengumpulkan metrics CPU, RAM, Disk, dan I/O dengan authentication menggunakan API key.
 
+## 🌟 Compatibility
+
+✅ **Python Versions:**
+- Python 2.7+ (CentOS 6/7, old systems)
+- Python 3.x (recommended)
+
+✅ **Operating Systems:**
+- CentOS 6, 7, 8, Stream
+- RHEL 6, 7, 8, 9
+- Rocky Linux 8, 9
+- AlmaLinux 8, 9
+- Ubuntu 14.04+
+- Debian 7+
+- Any Linux with Python 2.7+
+
+📖 **Full compatibility guide:** [CENTOS_COMPATIBILITY.md](../CENTOS_COMPATIBILITY.md)
+
+---
+
 ## 🔑 Prerequisites
 
 Sebelum install agent, Anda perlu:
 
 1. **Login ke Dashboard** monitoring sebagai admin
 2. **Add Host** baru di dashboard
-3. **Copy API Key** yang ditampilkan (hanya muncul sekali!)
+3. **Enable/Disable Key Mapping** sesuai kebutuhan:
+   - ✅ **Key Mapping Enabled** (Recommended): Hostname ditentukan oleh server dari API key (lebih aman)
+   - ❌ **Key Mapping Disabled**: Agent mengirim hostname sendiri (lebih fleksibel)
+4. **Copy API Key** yang ditampilkan (hanya muncul sekali!)
+
+## 🔐 Apa itu Key Mapping?
+
+**Key Mapping** adalah fitur keamanan yang memetakan API key dengan hostname di server:
+
+### ✅ **Key Mapping Enabled** (Secure Mode - RECOMMENDED)
+- Hostname **ditentukan oleh server** berdasarkan API key
+- Agent **tidak bisa** mengirim hostname palsu
+- Lebih aman, mencegah spoofing
+- Cocok untuk production environment
+
+### ❌ **Key Mapping Disabled** (Flexible Mode)
+- Agent **mengirim hostname sendiri**
+- Bisa override hostname dengan flag `--hostname`
+- Lebih fleksibel untuk testing atau development
+- Cocok untuk environment dinamis
 
 ## Fitur
 
@@ -16,7 +54,9 @@ Sebelum install agent, Anda perlu:
 - **Memory Monitoring**: RAM dan Swap usage
 - **Disk Monitoring**: Usage semua partisi
 - **I/O Monitoring**: Network dan Disk I/O rates
+- **System Information**: OS, kernel, architecture, uptime
 - **Secure Authentication**: Menggunakan API key per host
+- **Key Mapping Support**: Hostname mapping untuk keamanan ekstra
 - **Auto-reconnect**: Otomatis reconnect jika koneksi terputus
 
 ## Instalasi
@@ -67,34 +107,67 @@ python3 monitor_agent.py \
 python3 monitor_agent.py --server <SERVER_URL> --api-key <API_KEY> [OPTIONS]
 
 Required Arguments:
-  --server, -s    Monitoring server URL
-  --api-key, -k   API key for authentication (get from dashboard)
+  --server, -s        Monitoring server URL
+  --api-key, -k       API key for authentication (get from dashboard)
 
 Optional Arguments:
-  --hostname, -n  Custom hostname (default: auto-detect)
-  --interval, -i  Collection interval in seconds (default: 5)
+  --hostname, -n      Custom hostname (only works with --no-key-mapping)
+  --interval, -i      Collection interval in seconds (default: 5)
+  --no-key-mapping    Disable key mapping (send local hostname instead)
 ```
 
 ### Contoh:
 
+#### ✅ **Mode 1: Key Mapping Enabled (Recommended)**
+
+Hostname ditentukan oleh server dari API key:
+
 ```bash
-# Basic usage
+# Basic usage - hostname dari server
 python3 monitor_agent.py \
   --server http://192.168.1.100:5000 \
   --api-key "xR9kL3mP8qW2vN7jT4hY6bF1cZ5sA0dG9eQ8wE3rT2y"
 
-# Custom hostname dan interval
+# Dengan custom interval
 python3 monitor_agent.py \
   --server http://monitoring.example.com:5000 \
   --api-key "xR9kL3mP8qW2vN7jT4hY6bF1cZ5sA0dG9eQ8wE3rT2y" \
-  --hostname web-server-01 \
   --interval 10
+```
 
-# Dengan custom hostname
+#### ❌ **Mode 2: Key Mapping Disabled (Flexible)**
+
+Agent mengirim hostname sendiri:
+
+```bash
+# Auto-detect hostname
 python3 monitor_agent.py \
   --server http://192.168.1.100:5000 \
   --api-key "xR9kL3mP8qW2vN7jT4hY6bF1cZ5sA0dG9eQ8wE3rT2y" \
-  --hostname production-db-01
+  --no-key-mapping
+
+# Custom hostname
+python3 monitor_agent.py \
+  --server http://192.168.1.100:5000 \
+  --api-key "xR9kL3mP8qW2vN7jT4hY6bF1cZ5sA0dG9eQ8wE3rT2y" \
+  --hostname production-db-01 \
+  --no-key-mapping
+```
+
+### 📊 Output Example:
+
+```
+Starting monitoring agent for server1.example.com
+Sending metrics to: http://192.168.1.100:5000
+Collection interval: 5 seconds
+Key mapping enabled: True
+  → Hostname will be determined by server from API key (secure mode)
+
+[2024-11-06 10:30:15] Collected metrics:
+  CPU: 23.5%
+  Memory: 45.2%
+  Network: ↑12.3 KB/s ↓45.6 KB/s
+  ✓ Metrics sent successfully
 ```
 
 ## Setup Systemd Service (Manual)

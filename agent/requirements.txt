@@ -1,2 +1,10 @@
-psutil>=5.9.0
-requests>=2.31.0
+# Core dependencies
+# psutil - Compatible with Python 2.7+ and 3.x
+# For CentOS 6/7 with Python 2.7, use psutil>=3.4.2,<6.0.0
+# For Python 3.x, use latest version
+psutil>=3.4.2
+
+# HTTP library (optional, will fallback to urllib if not available)
+# For CentOS 6/7 with Python 2.7, use requests>=2.6.0,<3.0.0
+# For Python 3.x, use latest version
+requests>=2.6.0
