@@ -22,6 +22,23 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
 # CORS configuration - support credentials
 CORS(app, supports_credentials=True, origins=['*'])
 
+# Request logging middleware
+@app.before_request
+def log_request():
+    """Log all incoming requests"""
+    print(f"[REQUEST] {request.method} {request.path} from {request.remote_addr}")
+    print(f"[REQUEST] Headers: {dict(request.headers)}")
+    if request.method in ['POST', 'PUT', 'PATCH']:
+        print(f"[REQUEST] Body: {request.get_data(as_text=True)[:500]}")  # First 500 chars
+
+# Response logging middleware
+@app.after_request
+def log_response(response):
+    """Log all outgoing responses"""
+    print(f"[RESPONSE] {request.method} {request.path} -> {response.status}")
+    print(f"[RESPONSE] Content-Type: {response.content_type}")
+    return response
+
 # In-memory storage for metrics (untuk demo, bisa diganti dengan database)
 metrics_storage = defaultdict(lambda: deque(maxlen=1000))  # Store last 1000 metrics per server
 current_metrics = {}  # Latest metrics per server
@@ -326,37 +343,48 @@ def get_servers():
 @login_required
 def get_hosts():
     """Get all hosts with group information"""
-    db = get_db()
-    hosts = db.execute('''
-        SELECT h.id, h.hostname, h.description, h.ip_address, h.is_active, 
-               h.api_key, h.created_at, h.last_seen, h.group_id,
-               g.name as group_name, g.icon as group_icon
-        FROM hosts h
-        LEFT JOIN groups g ON h.group_id = g.id
-        ORDER BY h.hostname
-    ''').fetchall()
-    db.close()
-    
-    return jsonify([{
-        'id': host['id'],
-        'hostname': host['hostname'],
-        'description': host['description'],
-        'ip_address': host['ip_address'],
-        'is_active': bool(host['is_active']),
-        'api_key': host['api_key'],
-        'created_at': host['created_at'],
-        'last_seen': host['last_seen'],
-        'group_id': host['group_id'],
-        'group_name': host['group_name'],
-        'group_icon': host['group_icon']
-    } for host in hosts])
+    print(f"[API] GET /api/hosts called by user: {session.get('username')}")
+    try:
+        db = get_db()
+        hosts = db.execute('''
+            SELECT h.id, h.hostname, h.description, h.ip_address, h.is_active, 
+                   h.api_key, h.created_at, h.last_seen, h.group_id,
+                   g.name as group_name, g.icon as group_icon
+            FROM hosts h
+            LEFT JOIN groups g ON h.group_id = g.id
+            ORDER BY h.hostname
+        ''').fetchall()
+        db.close()
+        
+        result = [{
+            'id': host['id'],
+            'hostname': host['hostname'],
+            'description': host['description'],
+            'ip_address': host['ip_address'],
+            'is_active': bool(host['is_active']),
+            'api_key': host['api_key'],
+            'created_at': host['created_at'],
+            'last_seen': host['last_seen'],
+            'group_id': host['group_id'],
+            'group_name': host['group_name'],
+            'group_icon': host['group_icon']
+        } for host in hosts]
+        
+        print(f"[API] Returning {len(result)} hosts")
+        return jsonify(result)
+    except Exception as e:
+        print(f"[ERROR] Failed to get hosts: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/hosts', methods=['POST'])
 @admin_required
 def add_host():
     """Add new host with key mapping and group support"""
+    print(f"[API] POST /api/hosts called by user: {session.get('username')}")
     data = request.json
+    print(f"[API] Request data: {data}")
+    
     hostname = data.get('hostname')
     description = data.get('description', '')
     ip_address = data.get('ip_address', '')
@@ -364,6 +392,7 @@ def add_host():
     enable_key_mapping = data.get('enable_key_mapping', True)
     
     if not hostname:
+        print("[ERROR] Hostname required")
         return jsonify({'error': 'Hostname required'}), 400
     
     # Generate API key
@@ -380,7 +409,7 @@ def add_host():
         host_id = cursor.lastrowid
         db.close()
         
-        print(f"[HOST] New host added: {hostname} (Group: {group_id}, Key Mapping: {enable_key_mapping})")
+        print(f"[HOST] New host added: {hostname} (ID: {host_id}, Group: {group_id}, Key Mapping: {enable_key_mapping})")
         
         return jsonify({
             'id': host_id,
@@ -392,9 +421,14 @@ def add_host():
             'is_active': True,
             'enable_key_mapping': enable_key_mapping
         }), 201
-    except sqlite3.IntegrityError:
+    except sqlite3.IntegrityError as e:
         db.close()
+        print(f"[ERROR] Hostname already exists: {hostname}")
         return jsonify({'error': 'Hostname already exists'}), 409
+    except Exception as e:
+        db.close()
+        print(f"[ERROR] Failed to add host: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/hosts/<int:host_id>', methods=['PUT'])
@@ -480,25 +514,33 @@ def regenerate_api_key(host_id):
 @login_required
 def get_groups():
     """Get all groups"""
-    db = get_db()
-    groups = db.execute('''
-        SELECT g.*, COUNT(h.id) as host_count
-        FROM groups g
-        LEFT JOIN hosts h ON h.group_id = g.id
-        GROUP BY g.id
-        ORDER BY g.name
-    ''').fetchall()
-    db.close()
-    
-    return jsonify([{
-        'id': group['id'],
-        'name': group['name'],
-        'icon': group['icon'],
-        'description': group['description'],
-        'color': group['color'],
-        'host_count': group['host_count'],
-        'created_at': group['created_at']
-    } for group in groups])
+    print(f"[API] GET /api/groups called by user: {session.get('username')}")
+    try:
+        db = get_db()
+        groups = db.execute('''
+            SELECT g.*, COUNT(h.id) as host_count
+            FROM groups g
+            LEFT JOIN hosts h ON h.group_id = g.id
+            GROUP BY g.id
+            ORDER BY g.name
+        ''').fetchall()
+        db.close()
+        
+        result = [{
+            'id': group['id'],
+            'name': group['name'],
+            'icon': group['icon'],
+            'description': group['description'],
+            'color': group['color'],
+            'host_count': group['host_count'],
+            'created_at': group['created_at']
+        } for group in groups]
+        
+        print(f"[API] Returning {len(result)} groups")
+        return jsonify(result)
+    except Exception as e:
+        print(f"[ERROR] Failed to get groups: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/groups', methods=['POST'])
