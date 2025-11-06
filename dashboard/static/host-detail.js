@@ -277,11 +277,15 @@ function updateNetworkChart(data) {
 // Fetch current data
 async function fetchCurrentData() {
     try {
+        console.log('[DEBUG] Fetching current data for:', hostname);
         const response = await fetch(`/api/servers/${hostname}/current`);
+        console.log('[DEBUG] Current data response status:', response.status);
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
+        console.log('[DEBUG] Current data received:', data);
         
         // Update all components
         updateStats(data);
@@ -298,7 +302,7 @@ async function fetchCurrentData() {
         document.getElementById('lastUpdate').textContent = now.toLocaleTimeString();
         
     } catch (error) {
-        console.error('Error fetching current data:', error);
+        console.error('[ERROR] Error fetching current data:', error);
         const statusBadge = document.getElementById('hostStatus');
         statusBadge.innerHTML = '<i class="fas fa-circle"></i> Offline';
         statusBadge.className = 'status-badge offline';
