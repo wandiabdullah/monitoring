@@ -38,6 +38,11 @@
             overflow-x: hidden;
             min-width: 320px;
         }
+        
+        /* Prevent canvas from being too tall */
+        canvas {
+            max-height: 400px !important;
+        }
 
         /* Header */
         .header {
@@ -297,6 +302,19 @@
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             min-width: 0; /* Prevent overflow */
+        }
+        
+        .chart-card canvas {
+            max-height: 300px !important;
+            height: 300px !important;
+            width: 100% !important;
+        }
+        
+        .chart-card > div[style*="position: relative"] {
+            position: relative !important;
+            height: 300px !important;
+            max-height: 300px !important;
+            overflow: hidden !important;
         }
 
         .chart-header {
@@ -596,7 +614,9 @@
                             <div class="chart-subtitle">Last 5 minutes</div>
                         </div>
                     </div>
-                    <canvas id="historyChart" height="300"></canvas>
+                    <div style="position: relative; height: 300px; max-height: 300px;">
+                        <canvas id="historyChart"></canvas>
+                    </div>
                 </div>
 
                 <div class="chart-card">
@@ -609,7 +629,9 @@
                             <div class="chart-subtitle">Upload & Download Speed</div>
                         </div>
                     </div>
-                    <canvas id="networkChart" height="300"></canvas>
+                    <div style="position: relative; height: 300px; max-height: 300px;">
+                        <canvas id="networkChart"></canvas>
+                    </div>
                     <div class="network-grid">
                         <div class="network-stat">
                             <div class="network-value" id="uploadSpeed">0 KB/s</div>
