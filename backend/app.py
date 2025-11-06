@@ -57,8 +57,14 @@ def get_db():
     db.row_factory = sqlite3.Row
     return db
 
+def check_column_exists(cursor, table, column):
+    """Check if a column exists in a table"""
+    cursor.execute(f"PRAGMA table_info({table})")
+    columns = [row[1] for row in cursor.fetchall()]
+    return column in columns
+
 def init_db():
-    """Initialize database with tables"""
+    """Initialize database with tables and handle migrations"""
     db = get_db()
     cursor = db.cursor()
     
@@ -74,24 +80,7 @@ def init_db():
         )
     ''')
     
-    # Hosts table - Updated with group support
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS hosts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            hostname TEXT UNIQUE NOT NULL,
-            api_key TEXT UNIQUE NOT NULL,
-            description TEXT,
-            ip_address TEXT,
-            group_id INTEGER,
-            is_active INTEGER DEFAULT 1,
-            enable_key_mapping INTEGER DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_seen TIMESTAMP,
-            FOREIGN KEY (group_id) REFERENCES groups (id)
-        )
-    ''')
-    
-    # Groups table
+    # Groups table - Create first because hosts references it
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS groups (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -102,6 +91,32 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Hosts table - Updated with group support
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS hosts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            hostname TEXT UNIQUE NOT NULL,
+            api_key TEXT UNIQUE NOT NULL,
+            description TEXT,
+            ip_address TEXT,
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_seen TIMESTAMP
+        )
+    ''')
+    
+    # Migration: Add group_id column if it doesn't exist
+    if not check_column_exists(cursor, 'hosts', 'group_id'):
+        print("[MIGRATION] Adding group_id column to hosts table...")
+        cursor.execute('ALTER TABLE hosts ADD COLUMN group_id INTEGER')
+        print("[MIGRATION] ✓ group_id column added")
+    
+    # Migration: Add enable_key_mapping column if it doesn't exist
+    if not check_column_exists(cursor, 'hosts', 'enable_key_mapping'):
+        print("[MIGRATION] Adding enable_key_mapping column to hosts table...")
+        cursor.execute('ALTER TABLE hosts ADD COLUMN enable_key_mapping INTEGER DEFAULT 1')
+        print("[MIGRATION] ✓ enable_key_mapping column added")
     
     # API Keys table
     cursor.execute('''

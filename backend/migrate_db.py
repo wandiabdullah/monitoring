@@ -8,15 +8,26 @@ import os
 import sys
 
 # Determine database path
-if os.path.exists('data/monitoring.db'):
-    DATABASE = 'data/monitoring.db'
-elif os.path.exists('../data/monitoring.db'):
-    DATABASE = '../data/monitoring.db'
-elif os.path.exists('backend/data/monitoring.db'):
-    DATABASE = 'backend/data/monitoring.db'
-else:
+possible_paths = [
+    'data/monitoring.db',           # From backend dir
+    '../data/monitoring.db',        # From scripts dir
+    'backend/data/monitoring.db',   # From project root
+    '/app/backend/data/monitoring.db',  # Docker container
+    '/app/data/monitoring.db',      # Docker alternative
+]
+
+DATABASE = None
+for path in possible_paths:
+    if os.path.exists(path):
+        DATABASE = path
+        break
+
+if not DATABASE:
     print("❌ Could not find monitoring.db")
-    print("Please run this script from the project root or backend directory")
+    print("\nSearched in:")
+    for path in possible_paths:
+        print(f"  - {path}")
+    print("\nPlease run this script from the project root or backend directory")
     sys.exit(1)
 
 print(f"📁 Found database at: {DATABASE}")
