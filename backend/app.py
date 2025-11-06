@@ -290,6 +290,174 @@ def current_user():
     return jsonify({'error': 'User not found'}), 404
 
 
+# Account Settings API
+@app.route('/api/account/email', methods=['PUT'])
+@login_required
+def update_email():
+    """Update current user's email"""
+    data = request.json
+    new_email = data.get('email')
+    
+    if not new_email:
+        return jsonify({'error': 'Email required'}), 400
+    
+    try:
+        db = get_db()
+        db.execute(
+            'UPDATE users SET email = ? WHERE id = ?',
+            (new_email, session['user_id'])
+        )
+        db.commit()
+        db.close()
+        
+        print(f"[API] User {session['username']} updated email to {new_email}")
+        return jsonify({'success': True, 'message': 'Email updated successfully'})
+    except Exception as e:
+        print(f"[ERROR] Failed to update email: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/account/password', methods=['PUT'])
+@login_required
+def change_password():
+    """Change current user's password"""
+    data = request.json
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+    
+    if not current_password or not new_password:
+        return jsonify({'error': 'Current and new password required'}), 400
+    
+    if len(new_password) < 6:
+        return jsonify({'error': 'Password must be at least 6 characters'}), 400
+    
+    # Verify current password
+    current_hash = hash_password(current_password)
+    db = get_db()
+    user = db.execute(
+        'SELECT id FROM users WHERE id = ? AND password_hash = ?',
+        (session['user_id'], current_hash)
+    ).fetchone()
+    
+    if not user:
+        db.close()
+        return jsonify({'error': 'Current password is incorrect'}), 401
+    
+    # Update password
+    try:
+        new_hash = hash_password(new_password)
+        db.execute(
+            'UPDATE users SET password_hash = ? WHERE id = ?',
+            (new_hash, session['user_id'])
+        )
+        db.commit()
+        db.close()
+        
+        print(f"[API] User {session['username']} changed password")
+        return jsonify({'success': True, 'message': 'Password changed successfully'})
+    except Exception as e:
+        print(f"[ERROR] Failed to change password: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# User Management API
+@app.route('/api/users', methods=['GET'])
+@admin_required
+def get_users():
+    """Get all users (admin only)"""
+    try:
+        db = get_db()
+        users = db.execute(
+            'SELECT id, username, email, is_admin, created_at FROM users ORDER BY created_at DESC'
+        ).fetchall()
+        db.close()
+        
+        result = [{
+            'id': user['id'],
+            'username': user['username'],
+            'email': user['email'],
+            'is_admin': bool(user['is_admin']),
+            'created_at': user['created_at']
+        } for user in users]
+        
+        print(f"[API] Returning {len(result)} users")
+        return jsonify(result)
+    except Exception as e:
+        print(f"[ERROR] Failed to get users: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/users', methods=['POST'])
+@admin_required
+def create_user():
+    """Create new user (admin only)"""
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    email = data.get('email')
+    is_admin = data.get('is_admin', False)
+    
+    if not username or not password:
+        return jsonify({'error': 'Username and password required'}), 400
+    
+    if len(password) < 6:
+        return jsonify({'error': 'Password must be at least 6 characters'}), 400
+    
+    password_hash = hash_password(password)
+    
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute(
+            'INSERT INTO users (username, password_hash, email, is_admin) VALUES (?, ?, ?, ?)',
+            (username, password_hash, email, 1 if is_admin else 0)
+        )
+        user_id = cursor.lastrowid
+        db.commit()
+        db.close()
+        
+        print(f"[API] New user created: {username} (ID: {user_id}, Admin: {is_admin})")
+        return jsonify({
+            'success': True,
+            'message': 'User created successfully',
+            'user_id': user_id
+        }), 201
+    except sqlite3.IntegrityError:
+        return jsonify({'error': 'Username already exists'}), 409
+    except Exception as e:
+        print(f"[ERROR] Failed to create user: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/users/<int:user_id>', methods=['DELETE'])
+@admin_required
+def delete_user(user_id):
+    """Delete user (admin only)"""
+    # Prevent deleting yourself
+    if user_id == session['user_id']:
+        return jsonify({'error': 'Cannot delete your own account'}), 400
+    
+    try:
+        db = get_db()
+        
+        # Check if user exists
+        user = db.execute('SELECT username FROM users WHERE id = ?', (user_id,)).fetchone()
+        if not user:
+            db.close()
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Delete user
+        db.execute('DELETE FROM users WHERE id = ?', (user_id,))
+        db.commit()
+        db.close()
+        
+        print(f"[API] User deleted: {user['username']} (ID: {user_id})")
+        return jsonify({'success': True, 'message': 'User deleted successfully'})
+    except Exception as e:
+        print(f"[ERROR] Failed to delete user: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/health', methods=['GET'])
 def health():
     """Health check endpoint"""

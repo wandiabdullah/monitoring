@@ -350,6 +350,10 @@ function initializeEventListeners() {
                 openModal('addHostModal');
             } else if (view === 'add-group') {
                 openModal('addGroupModal');
+            } else if (view === 'account') {
+                showAccountSettings();
+            } else if (view === 'users') {
+                showUserManagement();
             } else if (view === 'settings') {
                 showSettingsView();
             }
@@ -931,6 +935,224 @@ window.addEventListener('beforeunload', () => {
     }
 });
 
+// ========================================
+// ACCOUNT SETTINGS & USER MANAGEMENT
+// ========================================
+
+// Show Account Settings
+function showAccountSettings() {
+    openModal('accountModal');
+    loadAccountInfo();
+    
+    // Setup form handlers
+    document.getElementById('updateEmailForm').onsubmit = handleUpdateEmail;
+    document.getElementById('changePasswordForm').onsubmit = handleChangePassword;
+}
+
+// Load current account info
+async function loadAccountInfo() {
+    if (currentUser) {
+        document.getElementById('currentEmail').value = currentUser.email || 'No email set';
+    }
+}
+
+// Handle email update
+async function handleUpdateEmail(e) {
+    e.preventDefault();
+    const newEmail = document.getElementById('newEmail').value;
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/account/email`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email: newEmail })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showAlert('accountAlert', 'success', 'Email updated successfully!');
+            currentUser.email = newEmail;
+            document.getElementById('currentEmail').value = newEmail;
+            document.getElementById('newEmail').value = '';
+        } else {
+            showAlert('accountAlert', 'danger', data.error || 'Failed to update email');
+        }
+    } catch (error) {
+        showAlert('accountAlert', 'danger', 'Connection error');
+    }
+}
+
+// Handle password change
+async function handleChangePassword(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    // Validate
+    if (newPassword !== confirmPassword) {
+        showAlert('accountAlert', 'danger', 'New passwords do not match!');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showAlert('accountAlert', 'danger', 'Password must be at least 6 characters!');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/account/password`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ 
+                current_password: currentPassword,
+                new_password: newPassword 
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showAlert('accountAlert', 'success', 'Password changed successfully!');
+            document.getElementById('changePasswordForm').reset();
+        } else {
+            showAlert('accountAlert', 'danger', data.error || 'Failed to change password');
+        }
+    } catch (error) {
+        showAlert('accountAlert', 'danger', 'Connection error');
+    }
+}
+
+// Show User Management
+function showUserManagement() {
+    openModal('userManagementModal');
+    loadUsers();
+    
+    // Setup form handler
+    document.getElementById('createUserForm').onsubmit = handleCreateUser;
+}
+
+// Load all users
+async function loadUsers() {
+    const tbody = document.getElementById('userListBody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin"></i> Loading users...</td></tr>';
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/users`, {
+            credentials: 'include'
+        });
+        
+        if (!response.ok) throw new Error('Failed to load users');
+        
+        const users = await response.json();
+        
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #999;">No users found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = users.map(user => `
+            <tr>
+                <td><strong>${escapeHtml(user.username)}</strong></td>
+                <td>${escapeHtml(user.email || '-')}</td>
+                <td><span class="badge ${user.is_admin ? 'admin' : 'user'}">${user.is_admin ? 'Admin' : 'User'}</span></td>
+                <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                <td>
+                    ${currentUser.username !== user.username ? `
+                        <button class="action-btn danger" onclick="deleteUser(${user.id}, '${escapeHtml(user.username)}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    ` : '<em style="color: #999;">Current user</em>'}
+                </td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #dc3545;">Error loading users</td></tr>';
+    }
+}
+
+// Handle create user
+async function handleCreateUser(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const userData = {
+        username: formData.get('username'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        is_admin: formData.get('role') === 'admin'
+    };
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(userData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showAlert('userAlert', 'success', 'User created successfully!');
+            hideAddUserForm();
+            loadUsers();
+        } else {
+            showAlert('userAlert', 'danger', data.error || 'Failed to create user');
+        }
+    } catch (error) {
+        showAlert('userAlert', 'danger', 'Connection error');
+    }
+}
+
+// Delete user
+async function deleteUser(userId, username) {
+    if (!confirm(`Are you sure you want to delete user "${username}"?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/users/${userId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showAlert('userAlert', 'success', 'User deleted successfully!');
+            loadUsers();
+        } else {
+            showAlert('userAlert', 'danger', data.error || 'Failed to delete user');
+        }
+    } catch (error) {
+        showAlert('userAlert', 'danger', 'Connection error');
+    }
+}
+
+// Show/Hide add user form
+function showAddUserForm() {
+    document.getElementById('addUserForm').style.display = 'block';
+    document.getElementById('createUserForm').reset();
+}
+
+function hideAddUserForm() {
+    document.getElementById('addUserForm').style.display = 'none';
+    document.getElementById('createUserForm').reset();
+}
+
+// Helper: Escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Make all necessary functions globally available for HTML onclick handlers
 window.openModal = openModal;
 window.closeModal = closeModal;
@@ -939,6 +1161,9 @@ window.toggleGroup = toggleGroup;
 window.viewHostDetails = viewHostDetails;
 window.deleteGroup = deleteGroup;
 window.logout = logout;
+window.showAddUserForm = showAddUserForm;
+window.hideAddUserForm = hideAddUserForm;
+window.deleteUser = deleteUser;
 
 console.log('[DEBUG] All window functions registered:', {
     openModal: typeof window.openModal,

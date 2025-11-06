@@ -684,6 +684,98 @@
             color: #999;
             margin-bottom: 24px;
         }
+
+        /* Settings Section */
+        .settings-section {
+            margin-bottom: 30px;
+        }
+
+        .settings-section h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-section h3 i {
+            color: var(--primary-color);
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .data-table thead {
+            background: #f8f9fa;
+        }
+
+        .data-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.admin {
+            background: #667eea;
+            color: white;
+        }
+
+        .badge.user {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn.danger {
+            background: #fee;
+            color: #c33;
+        }
+
+        .action-btn.danger:hover {
+            background: #fcc;
+        }
     </style>
 </head>
 <body>
@@ -735,6 +827,18 @@
 
         <div class="menu-section">Settings</div>
         <ul class="sidebar-menu">
+            <li class="menu-item">
+                <a href="#" class="menu-link" data-view="account">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Account Settings</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="#" class="menu-link" data-view="users">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+            </li>
             <li class="menu-item">
                 <a href="#" class="menu-link" data-view="settings">
                     <i class="fas fa-cog"></i>
@@ -941,6 +1045,139 @@
                 <button type="button" class="btn btn-primary" id="saveGroupBtn">
                     <i class="fas fa-save"></i> Create Group
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Settings Modal -->
+    <div class="modal" id="accountModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-circle"></i> Account Settings</h2>
+                <button class="close-modal" onclick="closeModal('accountModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="accountAlert" class="alert"></div>
+                
+                <!-- Update Email -->
+                <div class="settings-section">
+                    <h3><i class="fas fa-envelope"></i> Email Address</h3>
+                    <form id="updateEmailForm">
+                        <div class="form-group">
+                            <label for="currentEmail">Current Email</label>
+                            <input type="email" id="currentEmail" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="newEmail">New Email *</label>
+                            <input type="email" id="newEmail" name="newEmail" required placeholder="Enter new email">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Email
+                        </button>
+                    </form>
+                </div>
+
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #e0e0e0;">
+
+                <!-- Change Password -->
+                <div class="settings-section">
+                    <h3><i class="fas fa-key"></i> Change Password</h3>
+                    <form id="changePasswordForm">
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password *</label>
+                            <input type="password" id="currentPassword" name="currentPassword" required placeholder="Enter current password">
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">New Password *</label>
+                            <input type="password" id="newPassword" name="newPassword" required placeholder="Enter new password" minlength="6">
+                            <span class="help-text">Minimum 6 characters</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm New Password *</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirm new password">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Change Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Modal -->
+    <div class="modal" id="userManagementModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-users"></i> User Management</h2>
+                <button class="close-modal" onclick="closeModal('userManagementModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="userAlert" class="alert"></div>
+                
+                <!-- Add User Button -->
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-primary" onclick="showAddUserForm()">
+                        <i class="fas fa-user-plus"></i> Add New User
+                    </button>
+                </div>
+
+                <!-- Add User Form (Hidden by default) -->
+                <div id="addUserForm" style="display: none; margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                    <h3 style="margin-bottom: 15px;"><i class="fas fa-user-plus"></i> Add New User</h3>
+                    <form id="createUserForm">
+                        <div class="form-group">
+                            <label for="newUsername">Username *</label>
+                            <input type="text" id="newUsername" name="username" required placeholder="Enter username">
+                        </div>
+                        <div class="form-group">
+                            <label for="newUserEmail">Email *</label>
+                            <input type="email" id="newUserEmail" name="email" required placeholder="Enter email">
+                        </div>
+                        <div class="form-group">
+                            <label for="newUserPassword">Password *</label>
+                            <input type="password" id="newUserPassword" name="password" required placeholder="Enter password" minlength="6">
+                            <span class="help-text">Minimum 6 characters</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="newUserRole">Role *</label>
+                            <select id="newUserRole" name="role" required>
+                                <option value="user">User</option>
+                                <option value="admin">Administrator</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Create User
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="hideAddUserForm()">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- User List -->
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userListBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading users...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
