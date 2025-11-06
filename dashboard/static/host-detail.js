@@ -63,37 +63,44 @@ function updateHostInfo(data) {
 function updateStats(data) {
     console.log('[DEBUG] Updating stats with data:', data);
     
+    // Map agent data format to expected format
     const cpu = data.cpu || {};
     const memory = data.memory || {};
-    const swap = data.swap || {};
-    const load = data.load_average || [0, 0, 0];
+    const loadAverage = cpu.load_average || [0, 0, 0];
 
     try {
-        // CPU
-        document.getElementById('cpuValue').textContent = cpu.percent?.toFixed(1) + '%' || '0%';
-        document.getElementById('cpuCores').textContent = `${cpu.cores || 0} cores`;
-        document.getElementById('cpuProgress').style.width = (cpu.percent || 0) + '%';
+        // CPU - handle both formats
+        const cpuPercent = cpu.cpu_percent_total || cpu.percent || 0;
+        const cpuCores = cpu.cpu_count_logical || cpu.cores || 0;
+        
+        document.getElementById('cpuValue').textContent = cpuPercent.toFixed(1) + '%';
+        document.getElementById('cpuCores').textContent = `${cpuCores} cores`;
+        document.getElementById('cpuProgress').style.width = cpuPercent + '%';
 
-        // Memory
-        const memPercent = memory.percent || 0;
-        const memUsed = formatBytes(memory.used || 0);
-        const memTotal = formatBytes(memory.total || 0);
+        // Memory - handle both formats
+        const memPercent = memory.memory_percent || memory.percent || 0;
+        const memUsed = memory.memory_used || memory.used || 0;
+        const memTotal = memory.memory_total || memory.total || 0;
+        
         document.getElementById('memoryValue').textContent = memPercent.toFixed(1) + '%';
-        document.getElementById('memorySize').textContent = `${memUsed} / ${memTotal}`;
+        document.getElementById('memorySize').textContent = `${formatBytes(memUsed)} / ${formatBytes(memTotal)}`;
         document.getElementById('memoryProgress').style.width = memPercent + '%';
 
-        // Swap
-        const swapPercent = swap.percent || 0;
-        const swapUsed = formatBytes(swap.used || 0);
-        const swapTotal = formatBytes(swap.total || 0);
+        // Swap - handle both formats
+        const swapPercent = memory.swap_percent || 0;
+        const swapUsed = memory.swap_used || 0;
+        const swapTotal = memory.swap_total || 0;
+        
         document.getElementById('swapValue').textContent = swapPercent.toFixed(1) + '%';
-        document.getElementById('swapSize').textContent = `${swapUsed} / ${swapTotal}`;
+        document.getElementById('swapSize').textContent = `${formatBytes(swapUsed)} / ${formatBytes(swapTotal)}`;
         document.getElementById('swapProgress').style.width = swapPercent + '%';
 
         // Load Average
-        document.getElementById('loadValue').textContent = load[0]?.toFixed(2) || '0.0';
+        const loadValue = loadAverage && loadAverage.length > 0 ? loadAverage[0] : 0;
+        document.getElementById('loadValue').textContent = loadValue.toFixed(2);
         
         console.log('[DEBUG] Stats updated successfully');
+        console.log('[DEBUG] CPU:', cpuPercent + '%', 'Memory:', memPercent + '%', 'Swap:', swapPercent + '%');
     } catch (error) {
         console.error('[ERROR] Error updating stats:', error);
     }
@@ -102,7 +109,18 @@ function updateStats(data) {
 // Update disk list
 function updateDiskList(data) {
     const diskList = document.getElementById('diskList');
-    const disks = data.disks || [];
+    
+    // Handle both formats: array or object with disks/partitions property
+    let disks = [];
+    if (Array.isArray(data)) {
+        disks = data;
+    } else if (data.disks && Array.isArray(data.disks)) {
+        disks = data.disks;
+    } else if (data.partitions && Array.isArray(data.partitions)) {
+        disks = data.partitions;
+    }
+
+    console.log('[DEBUG] Processing disk data, count:', disks.length);
 
     if (disks.length === 0) {
         diskList.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">No disk data available</div>';
@@ -135,10 +153,14 @@ function updateDiskList(data) {
 
 // Update network speeds
 function updateNetworkSpeeds(data) {
-    const network = data.network || {};
+    // Agent sends io.network, handle both formats
+    const io = data.io || {};
+    const network = io.network || data.network || {};
     const upload = network.bytes_sent_per_sec || 0;
     const download = network.bytes_recv_per_sec || 0;
 
+    console.log('[DEBUG] Network speeds - Upload:', upload, 'Download:', download);
+    
     document.getElementById('uploadSpeed').textContent = formatSpeed(upload);
     document.getElementById('downloadSpeed').textContent = formatSpeed(download);
 }
@@ -244,7 +266,8 @@ function initNetworkChart() {
 function updateHistoryChart(data) {
     if (!historyChart) return;
 
-    const history = data.history || [];
+    // data is already an array from /api/servers/{hostname}/history
+    const history = Array.isArray(data) ? data : (data.history || []);
     const maxPoints = 60; // 5 minutes of data (5s interval)
 
     const labels = history.map(h => {
@@ -252,13 +275,23 @@ function updateHistoryChart(data) {
         return date.toLocaleTimeString();
     }).slice(-maxPoints);
 
-    const cpuData = history.map(h => h.cpu?.percent || 0).slice(-maxPoints);
-    const memData = history.map(h => h.memory?.percent || 0).slice(-maxPoints);
+    // Handle both formats: cpu.cpu_percent_total and cpu.percent
+    const cpuData = history.map(h => {
+        const cpu = h.cpu || {};
+        return cpu.cpu_percent_total || cpu.percent || 0;
+    }).slice(-maxPoints);
+    
+    const memData = history.map(h => {
+        const memory = h.memory || {};
+        return memory.memory_percent || memory.percent || 0;
+    }).slice(-maxPoints);
 
     historyChart.data.labels = labels;
     historyChart.data.datasets[0].data = cpuData;
     historyChart.data.datasets[1].data = memData;
-    historyChart.update('none'); // Update without animation
+    historyChart.update('none');
+    
+    console.log('[DEBUG] History chart updated with', history.length, 'data points');
 }
 
 // Update network chart
@@ -342,7 +375,8 @@ async function fetchDiskData() {
         
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-        console.log('[DEBUG] Disk data received, partitions:', data.length);
+        console.log('[DEBUG] Disk data received:', data);
+        
         updateDiskList(data);
     } catch (error) {
         console.error('[ERROR] Error fetching disk data:', error);
