@@ -42,6 +42,7 @@ def log_response(response):
 # In-memory storage for metrics (untuk demo, bisa diganti dengan database)
 metrics_storage = defaultdict(lambda: deque(maxlen=1000))  # Store last 1000 metrics per server
 current_metrics = {}  # Latest metrics per server
+system_info_cache = {}  # Cache system info (OS, kernel, etc) - updated every 5 minutes
 storage_lock = Lock()
 
 # Jika ingin persistent storage
@@ -327,6 +328,15 @@ def receive_metrics():
         metrics['server_received_at'] = datetime.utcnow().isoformat()
         
         with storage_lock:
+            # Cache system info if present
+            if 'system' in metrics:
+                system_info_cache[hostname] = metrics['system']
+                print(f"[INFO] System info cached for {hostname}")
+            
+            # Always include cached system info in current metrics
+            if hostname in system_info_cache:
+                metrics['system'] = system_info_cache[hostname]
+            
             # Store in memory
             metrics_storage[hostname].append(metrics)
             current_metrics[hostname] = metrics

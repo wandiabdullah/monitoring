@@ -210,13 +210,9 @@ class MonitoringAgent:
             'cpu': self.get_cpu_metrics(),
             'memory': self.get_memory_metrics(),
             'disk': self.get_disk_metrics(),
-            'io': self.get_io_metrics()
+            'io': self.get_io_metrics(),
+            'system': self.get_system_info()  # Always include system info for real-time uptime
         }
-        
-        # Add system information on first run or periodically
-        if not hasattr(self, '_last_system_info') or time.time() - self._last_system_info > 300:
-            metrics['system'] = self.get_system_info()
-            self._last_system_info = time.time()
         
         return metrics
     

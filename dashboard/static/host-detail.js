@@ -3,6 +3,7 @@ let hostname = '';
 let historyChart = null;
 let networkChart = null;
 let updateInterval = null;
+let lastSystemInfo = {}; // Cache system info since it's only sent every 5 minutes
 
 // Get hostname from URL
 function getHostnameFromURL() {
@@ -29,12 +30,19 @@ function formatSpeed(bytesPerSec) {
 // Update host info
 function updateHostInfo(data) {
     const infoGrid = document.getElementById('hostInfo');
-    const system = data.system || {};
+    
+    // Use current system info if available, otherwise use cached
+    if (data.system && Object.keys(data.system).length > 0) {
+        lastSystemInfo = data.system;
+        console.log('[DEBUG] System info updated:', lastSystemInfo);
+    }
+    
+    const system = Object.keys(lastSystemInfo).length > 0 ? lastSystemInfo : {};
     
     infoGrid.innerHTML = `
         <div class="info-item">
             <div class="info-label">Hostname</div>
-            <div class="info-value">${data.hostname || '-'}</div>
+            <div class="info-value">${data.hostname || hostname || '-'}</div>
         </div>
         <div class="info-item">
             <div class="info-label">Operating System</div>
@@ -50,13 +58,15 @@ function updateHostInfo(data) {
         </div>
         <div class="info-item">
             <div class="info-label">Uptime</div>
-            <div class="info-value">${system.uptime || '-'}</div>
+            <div class="info-value">${system.uptime || 'Loading...'}</div>
         </div>
         <div class="info-item">
             <div class="info-label">Last Boot</div>
             <div class="info-value">${system.boot_time || '-'}</div>
         </div>
     `;
+    
+    console.log('[DEBUG] Host info display updated');
 }
 
 // Update stats cards
