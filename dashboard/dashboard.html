@@ -321,13 +321,48 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            cursor: pointer;
         }
 
         .group-info {
             display: flex;
             align-items: center;
             gap: 12px;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .group-stats {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .group-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 16px;
+        }
+
+        .group-actions .action-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .group-actions .action-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .group-actions .action-btn.danger:hover {
+            background: var(--danger-color);
         }
 
         .group-icon {
@@ -406,8 +441,8 @@
             border: 2px solid transparent;
             border-radius: 10px;
             padding: 16px;
-            cursor: pointer;
             transition: all 0.3s;
+            position: relative;
         }
 
         .host-card:hover {
@@ -415,6 +450,46 @@
             background: white;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .host-card > div:last-child {
+            cursor: pointer;
+        }
+
+        .host-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .host-card:hover .host-actions {
+            opacity: 1;
+        }
+
+        .action-btn-small {
+            padding: 6px 8px;
+            border: none;
+            border-radius: 4px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .action-btn-small:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .action-btn-small.danger:hover {
+            background: var(--danger-color);
         }
 
         .host-header {
@@ -1044,6 +1119,90 @@
                 <button type="button" class="btn btn-secondary" onclick="closeModal('addGroupModal')">Cancel</button>
                 <button type="button" class="btn btn-primary" id="saveGroupBtn">
                     <i class="fas fa-save"></i> Create Group
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Group Modal -->
+    <div class="modal" id="editGroupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Group</h2>
+                <button class="close-modal" onclick="closeModal('editGroupModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="editGroupAlert" class="alert"></div>
+                <form id="editGroupForm">
+                    <input type="hidden" id="editGroupId">
+                    <div class="form-group">
+                        <label for="editGroupName">Group Name *</label>
+                        <input type="text" id="editGroupName" name="groupName" required placeholder="e.g., Production Servers">
+                    </div>
+                    <div class="form-group">
+                        <label for="editGroupIcon">Icon</label>
+                        <select id="editGroupIcon" name="groupIcon">
+                            <option value="fa-server">Server</option>
+                            <option value="fa-database">Database</option>
+                            <option value="fa-cloud">Cloud</option>
+                            <option value="fa-network-wired">Network</option>
+                            <option value="fa-desktop">Desktop</option>
+                            <option value="fa-hdd">Storage</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editGroupDescription">Description</label>
+                        <textarea id="editGroupDescription" name="groupDescription" placeholder="Group description"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editGroupModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateGroupBtn">
+                    <i class="fas fa-save"></i> Update Group
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Host Modal -->
+    <div class="modal" id="editHostModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Host</h2>
+                <button class="close-modal" onclick="closeModal('editHostModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="editHostAlert" class="alert"></div>
+                <form id="editHostForm">
+                    <input type="hidden" id="editHostId">
+                    <div class="form-group">
+                        <label for="editHostname">Hostname *</label>
+                        <input type="text" id="editHostname" name="hostname" required placeholder="e.g., web-server-01">
+                        <span class="help-text">Unique identifier for this host</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="editIpAddress">IP Address</label>
+                        <input type="text" id="editIpAddress" name="ipAddress" placeholder="e.g., 192.168.1.100">
+                        <span class="help-text">Optional: Server IP address</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="editHostGroup">Group</label>
+                        <select id="editHostGroup" name="hostGroup">
+                            <option value="">No Group</option>
+                        </select>
+                        <span class="help-text">Organize hosts into groups</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDescription">Description</label>
+                        <textarea id="editDescription" name="description" placeholder="e.g., Production web server"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editHostModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateHostBtn">
+                    <i class="fas fa-save"></i> Update Host
                 </button>
             </div>
         </div>

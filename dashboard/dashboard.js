@@ -150,8 +150,8 @@ function renderGroups() {
         const groupCard = document.createElement('div');
         groupCard.className = 'group-card';
         groupCard.innerHTML = `
-            <div class="group-header" onclick="toggleGroup(${group.id})">
-                <div class="group-info">
+            <div class="group-header">
+                <div class="group-info" onclick="toggleGroup(${group.id})">
                     <div class="group-icon">
                         <i class="fas ${group.icon}"></i>
                     </div>
@@ -160,7 +160,7 @@ function renderGroups() {
                         <p>${group.description}</p>
                     </div>
                 </div>
-                <div class="group-stats">
+                <div class="group-stats" onclick="toggleGroup(${group.id})">
                     <div class="group-stat">
                         <div class="number">${groupHosts.length}</div>
                         <div class="label">Hosts</div>
@@ -170,6 +170,14 @@ function renderGroups() {
                         <div class="label">Online</div>
                     </div>
                     <i class="fas fa-chevron-down group-toggle" id="toggle-${group.id}"></i>
+                </div>
+                <div class="group-actions">
+                    <button class="action-btn" onclick="event.stopPropagation(); editGroup(${group.id})" title="Edit Group">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn danger" onclick="event.stopPropagation(); deleteGroup(${group.id}, '${escapeHtml(group.name)}')" title="Delete Group">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
             </div>
             <div class="group-hosts" id="hosts-${group.id}">
@@ -241,23 +249,33 @@ function renderHosts(hostList) {
         const memoryPercent = metrics.memory_percent || 0;
         
         return `
-            <div class="host-card" onclick="viewHostDetails('${host.hostname}')">
-                <div class="host-header">
-                    <div class="host-name">${host.hostname}</div>
-                    <div class="status-dot ${host.status}"></div>
+            <div class="host-card">
+                <div class="host-actions">
+                    <button class="action-btn-small" onclick="event.stopPropagation(); editHost(${host.id})" title="Edit Host">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn-small danger" onclick="event.stopPropagation(); deleteHost(${host.id}, '${escapeHtml(host.hostname)}')" title="Delete Host">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
-                <div class="host-info">
-                    ${host.ip_address ? `<i class="fas fa-network-wired"></i> ${host.ip_address}` : ''}
-                    ${host.description ? `<br><small>${host.description}</small>` : ''}
-                </div>
-                <div class="host-metrics">
-                    <div class="metric">
-                        <i class="fas fa-microchip"></i>
-                        <span>CPU: <span class="metric-value">${cpuPercent.toFixed(1)}%</span></span>
+                <div onclick="viewHostDetails('${host.hostname}')">
+                    <div class="host-header">
+                        <div class="host-name">${host.hostname}</div>
+                        <div class="status-dot ${host.status}"></div>
                     </div>
-                    <div class="metric">
-                        <i class="fas fa-memory"></i>
-                        <span>RAM: <span class="metric-value">${memoryPercent.toFixed(1)}%</span></span>
+                    <div class="host-info">
+                        ${host.ip_address ? `<i class="fas fa-network-wired"></i> ${host.ip_address}` : ''}
+                        ${host.description ? `<br><small>${host.description}</small>` : ''}
+                    </div>
+                    <div class="host-metrics">
+                        <div class="metric">
+                            <i class="fas fa-microchip"></i>
+                            <span>CPU: <span class="metric-value">${cpuPercent.toFixed(1)}%</span></span>
+                        </div>
+                        <div class="metric">
+                            <i class="fas fa-memory"></i>
+                            <span>RAM: <span class="metric-value">${memoryPercent.toFixed(1)}%</span></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -721,10 +739,10 @@ function copyApiKey() {
 }
 
 // Delete group function
-async function deleteGroup(groupId) {
+async function deleteGroup(groupId, groupName) {
     console.log('[DEBUG] deleteGroup called:', groupId);
     
-    if (!confirm('Are you sure you want to delete this group? Hosts in this group will be ungrouped.')) {
+    if (!confirm(`Are you sure you want to delete group "${groupName}"?\nHosts in this group will be ungrouped.`)) {
         return;
     }
     
@@ -743,16 +761,221 @@ async function deleteGroup(groupId) {
         
         // Reload data
         await loadGroups();
+        loadGroupsIntoSelect();
         await loadHosts();
         
         // Refresh current view
-        showGroupsView();
+        refreshCurrentView();
         
     } catch (error) {
         console.error('[ERROR] Error deleting group:', error);
         alert('Error deleting group: ' + error.message);
     }
 }
+
+// Edit Group
+async function editGroup(groupId) {
+    console.log('[DEBUG] editGroup called:', groupId);
+    
+    // Find group data
+    const group = groups.find(g => g.id === groupId);
+    if (!group) {
+        alert('Group not found');
+        return;
+    }
+    
+    // Populate form
+    document.getElementById('editGroupId').value = group.id;
+    document.getElementById('editGroupName').value = group.name;
+    document.getElementById('editGroupIcon').value = group.icon;
+    document.getElementById('editGroupDescription').value = group.description || '';
+    
+    // Show modal
+    openModal('editGroupModal');
+    
+    // Setup save handler
+    document.getElementById('updateGroupBtn').onclick = updateGroup;
+}
+
+// Update Group
+async function updateGroup() {
+    console.log('[DEBUG] updateGroup called');
+    
+    const groupId = document.getElementById('editGroupId').value;
+    const name = document.getElementById('editGroupName').value.trim();
+    const icon = document.getElementById('editGroupIcon').value;
+    const description = document.getElementById('editGroupDescription').value.trim();
+    
+    if (!name) {
+        showAlert('editGroupAlert', 'Group name is required', 'danger');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/groups/${groupId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                name,
+                icon,
+                description
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to update group');
+        }
+        
+        const result = await response.json();
+        console.log('Group updated:', result);
+        
+        // Reload groups and hosts
+        await loadGroups();
+        loadGroupsIntoSelect();
+        await loadHosts();
+        
+        showAlert('editGroupAlert', 'Group updated successfully!', 'success');
+        
+        setTimeout(() => {
+            closeModal('editGroupModal');
+            refreshCurrentView();
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Error updating group:', error);
+        showAlert('editGroupAlert', error.message, 'danger');
+    }
+}
+
+// Edit Host
+async function editHost(hostId) {
+    console.log('[DEBUG] editHost called:', hostId);
+    
+    // Find host data
+    const host = hosts.find(h => h.id === hostId);
+    if (!host) {
+        alert('Host not found');
+        return;
+    }
+    
+    // Populate form
+    document.getElementById('editHostId').value = host.id;
+    document.getElementById('editHostname').value = host.hostname;
+    document.getElementById('editIpAddress').value = host.ip_address || '';
+    document.getElementById('editHostGroup').value = host.group_id || '';
+    document.getElementById('editDescription').value = host.description || '';
+    
+    // Load groups into select
+    const select = document.getElementById('editHostGroup');
+    select.innerHTML = '<option value="">No Group</option>';
+    groups.forEach(group => {
+        const option = document.createElement('option');
+        option.value = group.id;
+        option.textContent = group.name;
+        if (group.id === host.group_id) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+    
+    // Show modal
+    openModal('editHostModal');
+    
+    // Setup save handler
+    document.getElementById('updateHostBtn').onclick = updateHost;
+}
+
+// Update Host
+async function updateHost() {
+    console.log('[DEBUG] updateHost called');
+    
+    const hostId = document.getElementById('editHostId').value;
+    const hostname = document.getElementById('editHostname').value.trim();
+    const ipAddress = document.getElementById('editIpAddress').value.trim();
+    const groupId = document.getElementById('editHostGroup').value;
+    const description = document.getElementById('editDescription').value.trim();
+    
+    if (!hostname) {
+        showAlert('editHostAlert', 'Hostname is required', 'danger');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/hosts/${hostId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                hostname,
+                ip_address: ipAddress,
+                group_id: groupId ? parseInt(groupId) : null,
+                description
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to update host');
+        }
+        
+        const result = await response.json();
+        console.log('Host updated:', result);
+        
+        // Reload hosts
+        await loadHosts();
+        
+        showAlert('editHostAlert', 'Host updated successfully!', 'success');
+        
+        setTimeout(() => {
+            closeModal('editHostModal');
+            refreshCurrentView();
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Error updating host:', error);
+        showAlert('editHostAlert', error.message, 'danger');
+    }
+}
+
+// Delete Host
+async function deleteHost(hostId, hostname) {
+    console.log('[DEBUG] deleteHost called:', hostId);
+    
+    if (!confirm(`Are you sure you want to delete host "${hostname}"?\nAll metrics data will be lost.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/hosts/${hostId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to delete host');
+        }
+        
+        console.log('[DEBUG] Host deleted successfully');
+        
+        // Reload hosts
+        await loadHosts();
+        
+        // Refresh current view
+        refreshCurrentView();
+        
+    } catch (error) {
+        console.error('[ERROR] Error deleting host:', error);
+        alert('Error deleting host: ' + error.message);
+    }
+}
+
 
 // Save host
 async function saveHost() {
@@ -1160,6 +1383,9 @@ window.copyApiKey = copyApiKey;
 window.toggleGroup = toggleGroup;
 window.viewHostDetails = viewHostDetails;
 window.deleteGroup = deleteGroup;
+window.editGroup = editGroup;
+window.editHost = editHost;
+window.deleteHost = deleteHost;
 window.logout = logout;
 window.showAddUserForm = showAddUserForm;
 window.hideAddUserForm = hideAddUserForm;
@@ -1172,5 +1398,8 @@ console.log('[DEBUG] All window functions registered:', {
     toggleGroup: typeof window.toggleGroup,
     viewHostDetails: typeof window.viewHostDetails,
     deleteGroup: typeof window.deleteGroup,
+    editGroup: typeof window.editGroup,
+    editHost: typeof window.editHost,
+    deleteHost: typeof window.deleteHost,
     logout: typeof window.logout
 });

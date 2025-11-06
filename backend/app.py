@@ -646,17 +646,20 @@ def update_host(host_id):
     hostname = data.get('hostname', host['hostname'])
     description = data.get('description', host['description'])
     ip_address = data.get('ip_address', host['ip_address'])
+    group_id = data.get('group_id', host['group_id'])
     is_active = data.get('is_active', host['is_active'])
     
     try:
         db.execute(
-            'UPDATE hosts SET hostname = ?, description = ?, ip_address = ?, is_active = ? WHERE id = ?',
-            (hostname, description, ip_address, is_active, host_id)
+            'UPDATE hosts SET hostname = ?, description = ?, ip_address = ?, group_id = ?, is_active = ? WHERE id = ?',
+            (hostname, description, ip_address, group_id, is_active, host_id)
         )
         db.commit()
         
         updated_host = db.execute('SELECT * FROM hosts WHERE id = ?', (host_id,)).fetchone()
         db.close()
+        
+        print(f"[API] Host updated: {hostname} (ID: {host_id})")
         
         return jsonify({
             'id': updated_host['id'],
@@ -664,6 +667,7 @@ def update_host(host_id):
             'api_key': updated_host['api_key'],
             'description': updated_host['description'],
             'ip_address': updated_host['ip_address'],
+            'group_id': updated_host['group_id'],
             'is_active': bool(updated_host['is_active'])
         })
     except sqlite3.IntegrityError:
@@ -682,9 +686,13 @@ def delete_host(host_id):
         db.close()
         return jsonify({'error': 'Host not found'}), 404
     
+    hostname = host['hostname']
+    
     db.execute('DELETE FROM hosts WHERE id = ?', (host_id,))
     db.commit()
     db.close()
+    
+    print(f"[API] Host deleted: {hostname} (ID: {host_id})")
     
     return jsonify({'success': True})
 
@@ -803,6 +811,8 @@ def update_group(group_id):
         db.commit()
         db.close()
         
+        print(f"[API] Group updated: {name} (ID: {group_id})")
+        
         return jsonify({
             'id': group_id,
             'name': name,
@@ -826,11 +836,15 @@ def delete_group(group_id):
         db.close()
         return jsonify({'error': 'Group not found'}), 404
     
+    group_name = group['name']
+    
     # Ungroup all hosts in this group
     db.execute('UPDATE hosts SET group_id = NULL WHERE group_id = ?', (group_id,))
     db.execute('DELETE FROM groups WHERE id = ?', (group_id,))
     db.commit()
     db.close()
+    
+    print(f"[API] Group deleted: {group_name} (ID: {group_id})")
     
     return jsonify({'success': True})
 
