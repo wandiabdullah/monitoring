@@ -1,0 +1,54 @@
+# Docker ignore file
+# Exclude these files from Docker build context
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation (not needed in container)
+*.md
+!README.md
+
+# Data (will be mounted as volume)
+backend/data/
+*.jsonl
+*.db
+*.sqlite
+
+# Logs
+*.log
+logs/
+
+# Test files
+test_agent.py
+
+# Scripts
+start_backend.sh
+start_backend.bat
+
+# Agent files (not needed in backend container)
+agent/

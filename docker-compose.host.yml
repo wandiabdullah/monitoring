@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Nginx Reverse Proxy dengan Host Network Mode
+  nginx:
+    image: nginx:alpine
+    container_name: monitoring-nginx
+    network_mode: host
+    volumes:
+      - ./nginx/nginx-host.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx-logs:/var/log/nginx
+    restart: unless-stopped
+    depends_on:
+      - monitoring-backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Monitoring Backend & Dashboard
+  monitoring-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: monitoring-backend
+    network_mode: host
+    environment:
+      - FLASK_APP=app.py
+      - MONITORING_PORT=5000
+      - PYTHONUNBUFFERED=1
+      - FLASK_ENV=production
+    volumes:
+      - monitoring-data:/app/backend/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  monitoring-data:
+    driver: local
+  nginx-logs:
+    driver: local

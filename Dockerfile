@@ -1,0 +1,43 @@
+# Use Python slim image for smaller size
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    FLASK_APP=app.py \
+    MONITORING_PORT=5000
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY backend/requirements.txt /app/backend/requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r /app/backend/requirements.txt
+
+# Copy application files
+COPY backend/ /app/backend/
+COPY dashboard/ /app/backend/../dashboard/
+
+# Create data directory
+RUN mkdir -p /app/backend/data
+
+# Expose port
+EXPOSE 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5000/api/health || exit 1
+
+# Set working directory to backend
+WORKDIR /app/backend
+
+# Run the application
+CMD ["python", "app.py"]
