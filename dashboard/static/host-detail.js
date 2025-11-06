@@ -20,11 +20,11 @@ function formatBytes(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Format speed
-function formatSpeed(bytesPerSec) {
-    if (bytesPerSec < 1024) return bytesPerSec.toFixed(2) + ' B/s';
-    if (bytesPerSec < 1024 * 1024) return (bytesPerSec / 1024).toFixed(2) + ' KB/s';
-    return (bytesPerSec / (1024 * 1024)).toFixed(2) + ' MB/s';
+// Format speed (input in KB/s)
+function formatSpeed(kbPerSec) {
+    if (kbPerSec < 1) return (kbPerSec * 1024).toFixed(2) + ' B/s';
+    if (kbPerSec < 1024) return kbPerSec.toFixed(2) + ' KB/s';
+    return (kbPerSec / 1024).toFixed(2) + ' MB/s';
 }
 
 // Update host info
@@ -166,10 +166,10 @@ function updateNetworkSpeeds(data) {
     // Agent sends io.network, handle both formats
     const io = data.io || {};
     const network = io.network || data.network || {};
-    const upload = network.bytes_sent_per_sec || 0;
-    const download = network.bytes_recv_per_sec || 0;
+    const upload = (network.bytes_sent_per_sec || 0) / 1024; // Convert to KB/s
+    const download = (network.bytes_recv_per_sec || 0) / 1024; // Convert to KB/s
 
-    console.log('[DEBUG] Network speeds - Upload:', upload, 'Download:', download);
+    console.log('[DEBUG] Network speeds - Upload:', upload, 'KB/s, Download:', download, 'KB/s');
     
     document.getElementById('uploadSpeed').textContent = formatSpeed(upload);
     document.getElementById('downloadSpeed').textContent = formatSpeed(download);
@@ -306,23 +306,37 @@ function updateHistoryChart(data) {
 
 // Update network chart
 function updateNetworkChart(data) {
-    if (!networkChart) return;
+    if (!networkChart) {
+        console.log('[DEBUG] Network chart not initialized');
+        return;
+    }
 
-    const network = data.network_history || [];
+    // Data is directly an array from /api/servers/{hostname}/network endpoint
+    const network = Array.isArray(data) ? data : (data.network_history || []);
     const maxPoints = 60;
+
+    console.log('[DEBUG] Updating network chart with', network.length, 'data points');
+
+    if (network.length === 0) {
+        console.log('[DEBUG] No network data available');
+        return;
+    }
 
     const labels = network.map(n => {
         const date = new Date(n.timestamp);
         return date.toLocaleTimeString();
     }).slice(-maxPoints);
 
-    const uploadData = network.map(n => n.bytes_sent_per_sec || 0).slice(-maxPoints);
-    const downloadData = network.map(n => n.bytes_recv_per_sec || 0).slice(-maxPoints);
+    // Convert bytes per second to KB/s or MB/s for better readability
+    const uploadData = network.map(n => (n.bytes_sent_per_sec || 0) / 1024).slice(-maxPoints); // KB/s
+    const downloadData = network.map(n => (n.bytes_recv_per_sec || 0) / 1024).slice(-maxPoints); // KB/s
 
     networkChart.data.labels = labels;
     networkChart.data.datasets[0].data = uploadData;
     networkChart.data.datasets[1].data = downloadData;
     networkChart.update('none');
+    
+    console.log('[DEBUG] Network chart updated - Upload points:', uploadData.length, 'Download points:', downloadData.length);
 }
 
 // Fetch current data
