@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for, send_from_directory
 from flask_cors import CORS
 from datetime import datetime, timedelta
 import json
@@ -10,7 +10,7 @@ import secrets
 import sqlite3
 from functools import wraps
 
-app = Flask(__name__, static_folder='../dashboard', template_folder='../dashboard')
+app = Flask(__name__, static_folder='../dashboard', static_url_path='/static', template_folder='../dashboard')
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
 # Session configuration
@@ -173,6 +173,14 @@ def index():
     
     print(f"[AUTH] User logged in: {session.get('username')}")
     return render_template('dashboard.html')
+
+# Serve static files (JS, CSS, etc.)
+@app.route('/<path:filename>')
+def serve_static(filename):
+    """Serve static files from dashboard folder"""
+    if filename.endswith(('.js', '.css', '.png', '.jpg', '.ico', '.svg')):
+        return send_from_directory('../dashboard', filename)
+    return '', 404
 
 @app.route('/old-dashboard')
 @login_required
