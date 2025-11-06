@@ -31,12 +31,24 @@ Lihat [AUTHENTICATION.md](docs/AUTHENTICATION.md) untuk panduan lengkap.
 
 ---
 
-## �📋 Fitur
+##  Fitur
+
+### 🎨 Modern Dashboard (NEW!)
+- **Sidebar Navigation**: Professional UI dengan menu samping
+- **Group Management**: Organize hosts berdasarkan kategori
+  - Production, Development, Database, dll
+  - Visual icons untuk setiap group
+  - Collapsible group views
+- **Key Mapping Security**: API key locked per hostname
+  - Prevent key sharing antar hosts
+  - Enhanced security untuk multi-tenant
+- **Real-time Statistics**: Total hosts, online/offline, groups
+- **Responsive Design**: Mobile-friendly interface
 
 ### Authentication & Security
 - 🔐 Login system untuk akses dashboard
 - 👥 User management (Admin & Regular users)
-- 🔑 API key authentication per host
+- 🔑 API key authentication per host dengan key mapping
 - 🛡️ Session-based security
 - 📝 Audit trail (last_seen tracking)
 
