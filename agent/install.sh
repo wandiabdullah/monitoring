@@ -123,6 +123,10 @@ fi
 
 echo "Using Python: $PYTHON_CMD ($($PYTHON_CMD --version 2>&1))"
 
+# Get absolute path to Python
+PYTHON_PATH=$(which $PYTHON_CMD)
+echo "Python absolute path: $PYTHON_PATH"
+
 # Install required Python packages
 echo "📦 Installing Python dependencies..."
 $PIP_CMD install -r requirements.txt || {
@@ -135,8 +139,8 @@ $PIP_CMD install -r requirements.txt || {
 # Create systemd service
 echo "⚙️  Creating systemd service..."
 
-# Build ExecStart command
-EXEC_CMD="$PYTHON_CMD /opt/monitoring-agent/monitor_agent.py --server $SERVER_URL --api-key \${API_KEY} --interval $INTERVAL"
+# Build ExecStart command with ABSOLUTE PATH (required by systemd)
+EXEC_CMD="$PYTHON_PATH /opt/monitoring-agent/monitor_agent.py --server $SERVER_URL --api-key \${API_KEY} --interval $INTERVAL"
 
 # Add key mapping flag if disabled
 if [[ "$USE_KEY_MAPPING" =~ ^[Nn]$ ]]; then
