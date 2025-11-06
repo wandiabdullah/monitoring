@@ -1,6 +1,14 @@
 # Linux Monitoring Agent
 
-Agent untuk monitoring server Linux yang mengumpulkan metrics CPU, RAM, Disk, dan I/O.
+Agent untuk monitoring server Linux yang mengumpulkan metrics CPU, RAM, Disk, dan I/O dengan authentication menggunakan API key.
+
+## 🔑 Prerequisites
+
+Sebelum install agent, Anda perlu:
+
+1. **Login ke Dashboard** monitoring sebagai admin
+2. **Add Host** baru di dashboard
+3. **Copy API Key** yang ditampilkan (hanya muncul sekali!)
 
 ## Fitur
 
@@ -8,29 +16,34 @@ Agent untuk monitoring server Linux yang mengumpulkan metrics CPU, RAM, Disk, da
 - **Memory Monitoring**: RAM dan Swap usage
 - **Disk Monitoring**: Usage semua partisi
 - **I/O Monitoring**: Network dan Disk I/O rates
+- **Secure Authentication**: Menggunakan API key per host
+- **Auto-reconnect**: Otomatis reconnect jika koneksi terputus
 
 ## Instalasi
 
-### Metode 1: Instalasi Otomatis (dengan systemd service)
+### Metode 1: Instalasi Otomatis (dengan systemd service) - RECOMMENDED
 
 ```bash
 sudo chmod +x install.sh
 sudo ./install.sh
 ```
 
-Kemudian edit konfigurasi server:
-```bash
-sudo nano /etc/systemd/system/monitoring-agent.service
-```
-
-Ganti `YOUR_MONITORING_SERVER` dengan alamat server monitoring Anda.
+Script akan menanyakan:
+- **API Key**: Paste API key dari dashboard
+- **Server URL**: URL monitoring server (default: http://monitoring-server:5000)
+- **Hostname**: Opsional, auto-detect jika dikosongkan
+- **Interval**: Interval pengiriman metrics dalam detik (default: 5)
 
 Start service:
 ```bash
-sudo systemctl daemon-reload
 sudo systemctl enable monitoring-agent
 sudo systemctl start monitoring-agent
 sudo systemctl status monitoring-agent
+```
+
+View logs:
+```bash
+sudo journalctl -u monitoring-agent -f
 ```
 
 ### Metode 2: Manual Installation
@@ -40,18 +53,24 @@ sudo systemctl status monitoring-agent
 pip3 install -r requirements.txt
 ```
 
-2. Jalankan agent:
+2. Jalankan agent dengan API key:
 ```bash
-python3 monitor_agent.py --server http://monitoring-server:5000
+python3 monitor_agent.py \
+  --server http://monitoring-server:5000 \
+  --api-key "YOUR_API_KEY_HERE" \
+  --interval 5
 ```
 
 ## Usage
 
 ```bash
-python3 monitor_agent.py --server <SERVER_URL> [OPTIONS]
+python3 monitor_agent.py --server <SERVER_URL> --api-key <API_KEY> [OPTIONS]
 
-Options:
-  --server, -s    Monitoring server URL (required)
+Required Arguments:
+  --server, -s    Monitoring server URL
+  --api-key, -k   API key for authentication (get from dashboard)
+
+Optional Arguments:
   --hostname, -n  Custom hostname (default: auto-detect)
   --interval, -i  Collection interval in seconds (default: 5)
 ```
@@ -60,10 +79,58 @@ Options:
 
 ```bash
 # Basic usage
-python3 monitor_agent.py --server http://192.168.1.100:5000
+python3 monitor_agent.py \
+  --server http://192.168.1.100:5000 \
+  --api-key "xR9kL3mP8qW2vN7jT4hY6bF1cZ5sA0dG9eQ8wE3rT2y"
 
 # Custom hostname dan interval
-python3 monitor_agent.py --server http://monitoring.example.com:5000 --hostname web-server-01 --interval 10
+python3 monitor_agent.py \
+  --server http://monitoring.example.com:5000 \
+  --api-key "xR9kL3mP8qW2vN7jT4hY6bF1cZ5sA0dG9eQ8wE3rT2y" \
+  --hostname web-server-01 \
+  --interval 10
+
+# Dengan custom hostname
+python3 monitor_agent.py \
+  --server http://192.168.1.100:5000 \
+  --api-key "xR9kL3mP8qW2vN7jT4hY6bF1cZ5sA0dG9eQ8wE3rT2y" \
+  --hostname production-db-01
+```
+
+## Setup Systemd Service (Manual)
+
+1. Create service file:
+```bash
+sudo nano /etc/systemd/system/monitoring-agent.service
+```
+
+2. Paste configuration:
+```ini
+[Unit]
+Description=Server Monitoring Agent
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/monitoring-agent
+Environment="API_KEY=YOUR_API_KEY_HERE"
+ExecStart=/usr/bin/python3 /opt/monitoring-agent/monitor_agent.py \
+  --server http://monitoring-server:5000 \
+  --api-key ${API_KEY} \
+  --interval 5
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+3. Enable dan start:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable monitoring-agent
+sudo systemctl start monitoring-agent
 ```
 
 ## Data yang Dikumpulkan

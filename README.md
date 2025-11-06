@@ -2,28 +2,71 @@
 
 Sistem monitoring lengkap untuk server Linux dengan dashboard real-time monitoring CPU, RAM, Disk, dan I/O.
 
-## 📋 Fitur
+## � Quick Start
+
+### 1. Start Backend (Docker)
+
+```bash
+docker-compose -f docker-compose.host.yml up -d
+```
+
+### 2. Login ke Dashboard
+
+Buka browser: `http://localhost` (atau `http://your-server-ip`)
+
+**Default credentials:**
+- Username: `admin`
+- Password: `admin123`
+
+⚠️ **Ganti password setelah login pertama!**
+
+### 3. Add Host & Install Agent
+
+1. Login sebagai admin
+2. Buka "Host Management"
+3. Add host baru → Simpan API key
+4. Install agent di Linux server dengan API key tersebut
+
+Lihat [AUTHENTICATION.md](docs/AUTHENTICATION.md) untuk panduan lengkap.
+
+---
+
+## �📋 Fitur
+
+### Authentication & Security
+- 🔐 Login system untuk akses dashboard
+- 👥 User management (Admin & Regular users)
+- 🔑 API key authentication per host
+- 🛡️ Session-based security
+- 📝 Audit trail (last_seen tracking)
 
 ### Agent (Linux)
 - ✅ Monitoring CPU (usage per core, load average, frequency)
 - ✅ Monitoring Memory (RAM dan Swap)
 - ✅ Monitoring Disk (semua partisi)
 - ✅ Monitoring I/O (Network dan Disk I/O rates)
-- ✅ Auto-send metrics ke central server
+- ✅ Auto-send metrics ke central server dengan API key
 - ✅ Systemd service support
 
 ### Dashboard Web
+- ✅ Login page dengan authentication
 - ✅ Real-time monitoring multiple servers
 - ✅ Dashboard overview semua server
 - ✅ Detail view per server
 - ✅ Grafik history CPU & Memory
 - ✅ Grafik Network I/O real-time
 - ✅ Informasi disk usage per partisi
+- ✅ Host management (Add/Edit/Delete hosts)
+- ✅ API key management & regeneration
 - ✅ Auto-refresh setiap 5 detik
 
 ### Backend API
-- ✅ REST API untuk receive metrics
-- ✅ In-memory storage dengan history
+- ✅ REST API dengan authentication
+- ✅ API key verification untuk agents
+- ✅ User session management
+- ✅ Host management endpoints
+- ✅ SQLite database untuk users & hosts
+- ✅ In-memory storage untuk metrics dengan history
 - ✅ Multiple endpoints untuk berbagai data
 - ✅ Support untuk multiple servers
 

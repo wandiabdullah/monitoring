@@ -15,16 +15,18 @@ from typing import Dict, Any
 
 
 class MonitoringAgent:
-    def __init__(self, server_url: str, hostname: str = None, interval: int = 5):
+    def __init__(self, server_url: str, api_key: str, hostname: str = None, interval: int = 5):
         """
         Initialize monitoring agent
         
         Args:
             server_url: URL of the central monitoring server
+            api_key: API key for authentication
             hostname: Server hostname (auto-detect if None)
             interval: Collection interval in seconds
         """
         self.server_url = server_url
+        self.api_key = api_key
         self.hostname = hostname or socket.gethostname()
         self.interval = interval
         self.previous_net_io = None
@@ -149,15 +151,21 @@ class MonitoringAgent:
     def send_metrics(self, metrics: Dict[str, Any]) -> bool:
         """Send metrics to central server"""
         try:
+            headers = {
+                'Content-Type': 'application/json',
+                'X-API-Key': self.api_key
+            }
+            
             response = requests.post(
                 f"{self.server_url}/api/metrics",
                 json=metrics,
+                headers=headers,
                 timeout=5
             )
             if response.status_code == 200:
                 return True
             else:
-                print(f"Error sending metrics: {response.status_code}")
+                print(f"Error sending metrics: {response.status_code} - {response.text}")
                 return False
         except requests.exceptions.RequestException as e:
             print(f"Failed to send metrics: {e}")
@@ -199,6 +207,7 @@ class MonitoringAgent:
 def main():
     parser = argparse.ArgumentParser(description='Linux Server Monitoring Agent')
     parser.add_argument('--server', '-s', required=True, help='Monitoring server URL')
+    parser.add_argument('--api-key', '-k', required=True, help='API key for authentication')
     parser.add_argument('--hostname', '-n', help='Server hostname (auto-detect if not specified)')
     parser.add_argument('--interval', '-i', type=int, default=5, 
                        help='Collection interval in seconds (default: 5)')
@@ -207,6 +216,7 @@ def main():
     
     agent = MonitoringAgent(
         server_url=args.server,
+        api_key=args.api_key,
         hostname=args.hostname,
         interval=args.interval
     )
