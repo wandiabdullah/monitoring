@@ -217,6 +217,12 @@ def old_dashboard():
     """Serve old detailed dashboard"""
     return render_template('index.html')
 
+@app.route('/host-detail')
+@login_required
+def host_detail():
+    """Serve dedicated host detail page"""
+    return render_template('host-detail.html')
+
 @app.route('/login', methods=['GET'])
 def login_page():
     """Serve login page"""
