@@ -337,15 +337,15 @@ class MonitoringAgent:
         print("psutil version: {0}".format(psutil.__version__))
         
         if self.use_key_mapping:
-            print("  → Hostname will be determined by server from API key (secure mode)")
+            print("  >> Hostname will be determined by server from API key (secure mode)")
         else:
-            print("  → Using local hostname: {0}".format(self.hostname))
+            print("  >> Using local hostname: {0}".format(self.hostname))
         
         while True:
             try:
                 metrics = self.collect_metrics()
                 
-                # Print summary (Python 2/3 compatible)
+                # Print summary (Python 2/3 compatible, ASCII only)
                 cpu_percent = metrics['cpu']['cpu_percent_total']
                 mem_percent = metrics['memory']['memory_percent']
                 upload_speed = metrics['io']['network'].get('bytes_sent_per_sec', 0) / 1024
@@ -354,13 +354,13 @@ class MonitoringAgent:
                 print("\n[{0}] Collected metrics:".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
                 print("  CPU: {0:.1f}%".format(cpu_percent))
                 print("  Memory: {0:.1f}%".format(mem_percent))
-                print("  Network: ↑{0:.1f} KB/s ↓{1:.1f} KB/s".format(upload_speed, download_speed))
+                print("  Network: UP {0:.1f} KB/s | DOWN {1:.1f} KB/s".format(upload_speed, download_speed))
                 
                 # Send to server
                 if self.send_metrics(metrics):
-                    print("  ✓ Metrics sent successfully")
+                    print("  [OK] Metrics sent successfully")
                 else:
-                    print("  ✗ Failed to send metrics")
+                    print("  [ERROR] Failed to send metrics")
                 
                 time.sleep(self.interval)
                 
