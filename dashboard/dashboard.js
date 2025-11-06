@@ -267,9 +267,6 @@ function toggleGroup(groupId) {
     }
 }
 
-// Make toggleGroup available globally
-window.toggleGroup = toggleGroup;
-
 // Update statistics
 function updateStats() {
     const total = hosts.length;
@@ -290,6 +287,7 @@ function initializeEventListeners() {
     document.querySelectorAll('.menu-link').forEach(link => {
         link.addEventListener('click', (e) => {
             if (e.target.id === 'logoutBtn' || e.target.closest('#logoutBtn')) {
+                e.preventDefault();
                 logout();
                 return;
             }
@@ -299,10 +297,21 @@ function initializeEventListeners() {
             link.classList.add('active');
             
             const view = link.dataset.view;
-            if (view === 'add-host') {
+            console.log('[DEBUG] Menu clicked:', view);
+            
+            // Handle different views
+            if (view === 'dashboard') {
+                showDashboardView();
+            } else if (view === 'hosts') {
+                showAllHostsView();
+            } else if (view === 'groups') {
+                showGroupsView();
+            } else if (view === 'add-host') {
                 openModal('addHostModal');
             } else if (view === 'add-group') {
                 openModal('addGroupModal');
+            } else if (view === 'settings') {
+                showSettingsView();
             }
         });
     });
@@ -365,6 +374,205 @@ function initializeEventListeners() {
     loadGroupsIntoSelect();
     
     console.log('[DEBUG] Event listeners initialized successfully');
+}
+
+// View Functions
+function showDashboardView() {
+    console.log('[DEBUG] Showing dashboard view');
+    document.getElementById('pageTitle').textContent = 'Dashboard Overview';
+    renderGroups();
+}
+
+function showAllHostsView() {
+    console.log('[DEBUG] Showing all hosts view');
+    document.getElementById('pageTitle').textContent = 'All Hosts';
+    const container = document.getElementById('groupsList');
+    
+    if (hosts.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-server"></i>
+                <h3>No Hosts Yet</h3>
+                <p>Add your first host to start monitoring</p>
+                <button class="btn btn-primary" onclick="openModal('addHostModal')">
+                    <i class="fas fa-plus"></i> Add Host
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    // Show all hosts in a single card
+    const allHostsCard = `
+        <div class="group-card">
+            <div class="group-header">
+                <div class="group-info">
+                    <div class="group-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="group-details">
+                        <h3>All Hosts</h3>
+                        <p>Complete list of monitored servers</p>
+                    </div>
+                </div>
+                <div class="group-stats">
+                    <div class="group-stat">
+                        <div class="number">${hosts.length}</div>
+                        <div class="label">Total</div>
+                    </div>
+                    <div class="group-stat">
+                        <div class="number" style="color: var(--success-color)">${hosts.filter(h => h.status === 'online').length}</div>
+                        <div class="label">Online</div>
+                    </div>
+                </div>
+            </div>
+            <div class="group-hosts expanded">
+                ${renderHosts(hosts)}
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = allHostsCard;
+}
+
+function showGroupsView() {
+    console.log('[DEBUG] Showing groups view');
+    document.getElementById('pageTitle').textContent = 'Manage Groups';
+    const container = document.getElementById('groupsList');
+    
+    if (groups.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-layer-group"></i>
+                <h3>No Groups Yet</h3>
+                <p>Create groups to organize your servers</p>
+                <button class="btn btn-primary" onclick="openModal('addGroupModal')">
+                    <i class="fas fa-plus"></i> Create Group
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="groups-management">';
+    
+    groups.forEach(group => {
+        const groupHosts = hosts.filter(h => h.group_id === group.id);
+        
+        html += `
+            <div class="group-card">
+                <div class="group-header">
+                    <div class="group-info">
+                        <div class="group-icon" style="background: ${group.color}20; color: ${group.color}">
+                            <i class="fas ${group.icon}"></i>
+                        </div>
+                        <div class="group-details">
+                            <h3>${group.name}</h3>
+                            <p>${group.description || 'No description'}</p>
+                        </div>
+                    </div>
+                    <div class="group-stats">
+                        <div class="group-stat">
+                            <div class="number">${groupHosts.length}</div>
+                            <div class="label">Hosts</div>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteGroup(${group.id})" style="padding: 8px 16px; font-size: 12px;">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function showSettingsView() {
+    console.log('[DEBUG] Showing settings view');
+    document.getElementById('pageTitle').textContent = 'Settings';
+    const container = document.getElementById('groupsList');
+    
+    container.innerHTML = `
+        <div class="settings-container">
+            <div class="group-card">
+                <div class="group-header">
+                    <div class="group-info">
+                        <div class="group-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="group-details">
+                            <h3>User Information</h3>
+                            <p>Current logged in user</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="group-hosts expanded" style="padding: 24px;">
+                    <div style="display: grid; gap: 16px;">
+                        <div>
+                            <strong>Username:</strong> ${currentUser ? currentUser.username : 'N/A'}
+                        </div>
+                        <div>
+                            <strong>Role:</strong> ${currentUser && currentUser.is_admin ? 'Administrator' : 'User'}
+                        </div>
+                        <div>
+                            <strong>Email:</strong> ${currentUser && currentUser.email ? currentUser.email : 'Not set'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="group-card">
+                <div class="group-header">
+                    <div class="group-info">
+                        <div class="group-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="group-details">
+                            <h3>System Statistics</h3>
+                            <p>Monitoring system overview</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="group-hosts expanded" style="padding: 24px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <strong>Total Hosts:</strong> ${hosts.length}
+                        </div>
+                        <div>
+                            <strong>Online Hosts:</strong> ${hosts.filter(h => h.status === 'online').length}
+                        </div>
+                        <div>
+                            <strong>Total Groups:</strong> ${groups.length}
+                        </div>
+                        <div>
+                            <strong>Offline Hosts:</strong> ${hosts.filter(h => h.status === 'offline').length}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="group-card">
+                <div class="group-header">
+                    <div class="group-info">
+                        <div class="group-icon" style="background: #dc354520; color: #dc3545">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </div>
+                        <div class="group-details">
+                            <h3>Account Actions</h3>
+                            <p>Manage your session</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="group-hosts expanded" style="padding: 24px;">
+                    <button class="btn btn-danger" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // Load groups into select dropdown
@@ -430,27 +638,74 @@ function closeModal(modalId) {
     console.log('[DEBUG] Modal closed successfully:', modalId);
 }
 
-// Make closeModal available globally
-window.closeModal = closeModal;
-
 // Copy API key function (called from HTML)
 function copyApiKey() {
-    const apiKey = document.getElementById('generatedApiKey').textContent;
+    console.log('[DEBUG] copyApiKey called');
+    const apiKeyElement = document.getElementById('generatedApiKey');
+    
+    if (!apiKeyElement) {
+        console.error('[ERROR] API key element not found');
+        return;
+    }
+    
+    const apiKey = apiKeyElement.textContent;
+    
+    if (!apiKey) {
+        console.error('[ERROR] No API key to copy');
+        return;
+    }
+    
     navigator.clipboard.writeText(apiKey).then(() => {
+        console.log('[DEBUG] API key copied to clipboard');
         const btn = event.target.closest('.copy-btn');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-        setTimeout(() => {
-            btn.innerHTML = originalText;
-        }, 2000);
+        if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            btn.style.background = '#28a745';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = '';
+            }, 2000);
+        }
     }).catch(err => {
-        console.error('Failed to copy:', err);
-        alert('Failed to copy API key. Please copy manually.');
+        console.error('[ERROR] Failed to copy:', err);
+        alert('Failed to copy API key. Please select and copy manually.');
     });
 }
 
-// Make copyApiKey available globally
-window.copyApiKey = copyApiKey;
+// Delete group function
+async function deleteGroup(groupId) {
+    console.log('[DEBUG] deleteGroup called:', groupId);
+    
+    if (!confirm('Are you sure you want to delete this group? Hosts in this group will be ungrouped.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/groups/${groupId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to delete group');
+        }
+        
+        console.log('[DEBUG] Group deleted successfully');
+        
+        // Reload data
+        await loadGroups();
+        await loadHosts();
+        
+        // Refresh current view
+        showGroupsView();
+        
+    } catch (error) {
+        console.error('[ERROR] Error deleting group:', error);
+        alert('Error deleting group: ' + error.message);
+    }
+}
 
 // Save host
 async function saveHost() {
@@ -587,8 +842,12 @@ function viewHostDetails(hostname) {
     window.location.href = `/old-dashboard?host=${hostname}`;
 }
 
-// Make viewHostDetails available globally
-window.viewHostDetails = viewHostDetails;
+// View host details
+function viewHostDetails(hostname) {
+    console.log('[DEBUG] Viewing host details:', hostname);
+    // Redirect to old index.html for detailed view
+    window.location.href = `/old-dashboard?host=${hostname}`;
+}
 
 // Show alert
 function showAlert(elementId, message, type) {
@@ -634,4 +893,23 @@ window.addEventListener('beforeunload', () => {
     if (refreshInterval) {
         clearInterval(refreshInterval);
     }
+});
+
+// Make all necessary functions globally available for HTML onclick handlers
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.copyApiKey = copyApiKey;
+window.toggleGroup = toggleGroup;
+window.viewHostDetails = viewHostDetails;
+window.deleteGroup = deleteGroup;
+window.logout = logout;
+
+console.log('[DEBUG] All window functions registered:', {
+    openModal: typeof window.openModal,
+    closeModal: typeof window.closeModal,
+    copyApiKey: typeof window.copyApiKey,
+    toggleGroup: typeof window.toggleGroup,
+    viewHostDetails: typeof window.viewHostDetails,
+    deleteGroup: typeof window.deleteGroup,
+    logout: typeof window.logout
 });
