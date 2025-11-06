@@ -7,12 +7,30 @@ let refreshInterval = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
-    await checkAuth();
-    await loadGroups();
-    await loadHosts();
-    initializeEventListeners();
-    startAutoRefresh();
-    updateStats();
+    console.log('[DEBUG] Dashboard initializing...');
+    try {
+        await checkAuth();
+        console.log('[DEBUG] Auth check completed');
+        
+        await loadGroups();
+        console.log('[DEBUG] Groups loaded:', groups.length);
+        
+        await loadHosts();
+        console.log('[DEBUG] Hosts loaded:', hosts.length);
+        
+        initializeEventListeners();
+        console.log('[DEBUG] Event listeners initialized');
+        
+        startAutoRefresh();
+        console.log('[DEBUG] Auto-refresh started');
+        
+        updateStats();
+        console.log('[DEBUG] Stats updated');
+        
+        console.log('[DEBUG] Dashboard initialization complete!');
+    } catch (error) {
+        console.error('[ERROR] Dashboard initialization failed:', error);
+    }
 });
 
 // Check authentication
@@ -44,25 +62,24 @@ function updateUserInfo() {
     }
 }
 
-// Load groups from localStorage (since backend doesn't have groups yet)
+// Load groups from backend API
 async function loadGroups() {
-    const savedGroups = localStorage.getItem('serverGroups');
-    if (savedGroups) {
-        groups = JSON.parse(savedGroups);
-    } else {
-        // Default groups
-        groups = [
-            { id: 1, name: 'Production', icon: 'fa-server', description: 'Production servers', color: '#667eea' },
-            { id: 2, name: 'Development', icon: 'fa-code', description: 'Development environment', color: '#28a745' },
-            { id: 3, name: 'Database', icon: 'fa-database', description: 'Database servers', color: '#17a2b8' }
-        ];
-        saveGroups();
+    try {
+        const response = await fetch(`${API_BASE}/api/groups`, {
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            groups = await response.json();
+        } else {
+            // If no groups exist, create default groups
+            console.log('No groups found, creating defaults...');
+            groups = [];
+        }
+    } catch (error) {
+        console.error('Error loading groups:', error);
+        groups = [];
     }
-}
-
-// Save groups to localStorage
-function saveGroups() {
-    localStorage.setItem('serverGroups', JSON.stringify(groups));
 }
 
 // Load hosts from API
@@ -236,6 +253,11 @@ function toggleGroup(groupId) {
     const hostsContainer = document.getElementById(`hosts-${groupId}`);
     const toggle = document.getElementById(`toggle-${groupId}`);
     
+    if (!hostsContainer || !toggle) {
+        console.error('[ERROR] Group elements not found:', groupId);
+        return;
+    }
+    
     if (hostsContainer.classList.contains('expanded')) {
         hostsContainer.classList.remove('expanded');
         toggle.classList.add('collapsed');
@@ -244,6 +266,9 @@ function toggleGroup(groupId) {
         toggle.classList.remove('collapsed');
     }
 }
+
+// Make toggleGroup available globally
+window.toggleGroup = toggleGroup;
 
 // Update statistics
 function updateStats() {
@@ -259,6 +284,8 @@ function updateStats() {
 
 // Initialize event listeners
 function initializeEventListeners() {
+    console.log('[DEBUG] Initializing event listeners...');
+    
     // Menu navigation
     document.querySelectorAll('.menu-link').forEach(link => {
         link.addEventListener('click', (e) => {
@@ -281,32 +308,63 @@ function initializeEventListeners() {
     });
     
     // Add host button
-    document.getElementById('addHostBtn').addEventListener('click', () => {
-        openModal('addHostModal');
-    });
+    const addHostBtn = document.getElementById('addHostBtn');
+    if (addHostBtn) {
+        addHostBtn.addEventListener('click', () => {
+            console.log('[DEBUG] Add Host button clicked');
+            openModal('addHostModal');
+        });
+        console.log('[DEBUG] Add Host button listener attached');
+    } else {
+        console.error('[ERROR] Add Host button not found!');
+    }
     
     // Add group button
-    document.getElementById('addGroupBtn').addEventListener('click', () => {
-        openModal('addGroupModal');
-    });
+    const addGroupBtn = document.getElementById('addGroupBtn');
+    if (addGroupBtn) {
+        addGroupBtn.addEventListener('click', () => {
+            console.log('[DEBUG] Add Group button clicked');
+            openModal('addGroupModal');
+        });
+        console.log('[DEBUG] Add Group button listener attached');
+    } else {
+        console.error('[ERROR] Add Group button not found!');
+    }
     
     // Refresh button
-    document.getElementById('refreshBtn').addEventListener('click', async () => {
-        const btn = document.getElementById('refreshBtn');
-        const icon = btn.querySelector('i');
-        icon.classList.add('fa-spin');
-        await loadHosts();
-        setTimeout(() => icon.classList.remove('fa-spin'), 500);
-    });
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', async () => {
+            console.log('[DEBUG] Refresh button clicked');
+            const icon = refreshBtn.querySelector('i');
+            icon.classList.add('fa-spin');
+            await loadGroups();
+            await loadHosts();
+            setTimeout(() => icon.classList.remove('fa-spin'), 500);
+        });
+        console.log('[DEBUG] Refresh button listener attached');
+    } else {
+        console.error('[ERROR] Refresh button not found!');
+    }
     
     // Save host
-    document.getElementById('saveHostBtn').addEventListener('click', saveHost);
+    const saveHostBtn = document.getElementById('saveHostBtn');
+    if (saveHostBtn) {
+        saveHostBtn.addEventListener('click', saveHost);
+        console.log('[DEBUG] Save Host button listener attached');
+    }
     
     // Save group
-    document.getElementById('saveGroupBtn').addEventListener('click', saveGroup);
+    const saveGroupBtn = document.getElementById('saveGroupBtn');
+    if (saveGroupBtn) {
+        saveGroupBtn.addEventListener('click', saveGroup);
+        console.log('[DEBUG] Save Group button listener attached');
+    }
     
     // Load groups into select
     loadGroupsIntoSelect();
+    
+    console.log('[DEBUG] Event listeners initialized successfully');
 }
 
 // Load groups into select dropdown
@@ -324,27 +382,79 @@ function loadGroupsIntoSelect() {
 
 // Open modal
 function openModal(modalId) {
-    document.getElementById(modalId).classList.add('show');
+    console.log('[DEBUG] Opening modal:', modalId);
+    const modal = document.getElementById(modalId);
+    
+    if (!modal) {
+        console.error('[ERROR] Modal not found:', modalId);
+        return;
+    }
+    
+    modal.classList.add('show');
     
     // Reset forms
     if (modalId === 'addHostModal') {
-        document.getElementById('addHostForm').reset();
-        document.getElementById('apiKeyResult').style.display = 'none';
-        document.getElementById('saveHostBtn').style.display = 'inline-flex';
+        const form = document.getElementById('addHostForm');
+        if (form) form.reset();
+        
+        const apiKeyResult = document.getElementById('apiKeyResult');
+        if (apiKeyResult) apiKeyResult.style.display = 'none';
+        
+        const saveBtn = document.getElementById('saveHostBtn');
+        if (saveBtn) saveBtn.style.display = 'inline-flex';
+        
         hideAlert('hostAlert');
+        loadGroupsIntoSelect(); // Refresh groups dropdown
+        
     } else if (modalId === 'addGroupModal') {
-        document.getElementById('addGroupForm').reset();
+        const form = document.getElementById('addGroupForm');
+        if (form) form.reset();
+        
         hideAlert('groupAlert');
     }
+    
+    console.log('[DEBUG] Modal opened successfully:', modalId);
 }
 
 // Close modal
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('show');
+    console.log('[DEBUG] Closing modal:', modalId);
+    const modal = document.getElementById(modalId);
+    
+    if (!modal) {
+        console.error('[ERROR] Modal not found:', modalId);
+        return;
+    }
+    
+    modal.classList.remove('show');
+    console.log('[DEBUG] Modal closed successfully:', modalId);
 }
+
+// Make closeModal available globally
+window.closeModal = closeModal;
+
+// Copy API key function (called from HTML)
+function copyApiKey() {
+    const apiKey = document.getElementById('generatedApiKey').textContent;
+    navigator.clipboard.writeText(apiKey).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy API key. Please copy manually.');
+    });
+}
+
+// Make copyApiKey available globally
+window.copyApiKey = copyApiKey;
 
 // Save host
 async function saveHost() {
+    console.log('[DEBUG] saveHost called');
     const form = document.getElementById('addHostForm');
     const formData = new FormData(form);
     
@@ -352,7 +462,15 @@ async function saveHost() {
     const ipAddress = formData.get('ipAddress');
     const description = formData.get('description');
     const groupId = formData.get('hostGroup');
-    const enableKeyMapping = formData.get('enableKeyMapping') === 'on';
+    const enableKeyMapping = document.getElementById('enableKeyMapping').checked;
+    
+    console.log('[DEBUG] Form data:', {
+        hostname,
+        ipAddress,
+        description,
+        groupId,
+        enableKeyMapping
+    });
     
     if (!hostname) {
         showAlert('hostAlert', 'Hostname is required', 'danger');
@@ -360,27 +478,35 @@ async function saveHost() {
     }
     
     try {
+        const payload = {
+            hostname,
+            ip_address: ipAddress,
+            description,
+            group_id: groupId ? parseInt(groupId) : null,
+            enable_key_mapping: enableKeyMapping
+        };
+        
+        console.log('[DEBUG] Sending payload:', payload);
+        
         const response = await fetch(`${API_BASE}/api/hosts`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
-            body: JSON.stringify({
-                hostname,
-                ip_address: ipAddress,
-                description,
-                group_id: groupId ? parseInt(groupId) : null,
-                enable_key_mapping: enableKeyMapping
-            })
+            body: JSON.stringify(payload)
         });
+        
+        console.log('[DEBUG] Response status:', response.status);
         
         if (!response.ok) {
             const error = await response.json();
+            console.error('[ERROR] Server error:', error);
             throw new Error(error.error || 'Failed to add host');
         }
         
         const result = await response.json();
+        console.log('[DEBUG] Host added successfully:', result);
         
         // Show API key
         document.getElementById('generatedApiKey').textContent = result.api_key;
@@ -394,13 +520,13 @@ async function saveHost() {
         showAlert('hostAlert', 'Host added successfully! Copy the API key below.', 'success');
         
     } catch (error) {
-        console.error('Error adding host:', error);
+        console.error('[ERROR] Error adding host:', error);
         showAlert('hostAlert', error.message, 'danger');
     }
 }
 
 // Save group
-function saveGroup() {
+async function saveGroup() {
     const form = document.getElementById('addGroupForm');
     const formData = new FormData(form);
     
@@ -413,45 +539,56 @@ function saveGroup() {
         return;
     }
     
-    const newGroup = {
-        id: Date.now(),
-        name,
-        icon,
-        description,
-        color: getRandomColor()
-    };
-    
-    groups.push(newGroup);
-    saveGroups();
-    loadGroupsIntoSelect();
-    renderGroups();
-    updateStats();
-    
-    showAlert('groupAlert', 'Group created successfully!', 'success');
-    
-    setTimeout(() => {
-        closeModal('addGroupModal');
-    }, 1500);
-}
-
-// Copy API key
-function copyApiKey() {
-    const apiKey = document.getElementById('generatedApiKey').textContent;
-    navigator.clipboard.writeText(apiKey).then(() => {
-        const btn = event.target.closest('.copy-btn');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    try {
+        const response = await fetch(`${API_BASE}/api/groups`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                name,
+                icon,
+                description,
+                color: getRandomColor()
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to create group');
+        }
+        
+        const result = await response.json();
+        console.log('Group created:', result);
+        
+        // Reload groups and hosts
+        await loadGroups();
+        loadGroupsIntoSelect();
+        await loadHosts();
+        updateStats();
+        
+        showAlert('groupAlert', 'Group created successfully!', 'success');
+        
         setTimeout(() => {
-            btn.innerHTML = originalText;
-        }, 2000);
-    });
+            closeModal('addGroupModal');
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Error creating group:', error);
+        showAlert('groupAlert', error.message, 'danger');
+    }
 }
 
 // View host details
 function viewHostDetails(hostname) {
+    console.log('[DEBUG] Viewing host details:', hostname);
     // Redirect to old index.html for detailed view
-    window.location.href = `index.html?host=${hostname}`;
+    window.location.href = `/old-dashboard?host=${hostname}`;
 }
+
+// Make viewHostDetails available globally
+window.viewHostDetails = viewHostDetails;
 
 // Show alert
 function showAlert(elementId, message, type) {
