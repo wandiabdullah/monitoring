@@ -6,6 +6,7 @@ let hosts = [];
 let refreshInterval = null;
 let expandedGroups = new Set(); // Track which groups are expanded
 let currentView = 'dashboard'; // Track current view: 'dashboard', 'allhosts', 'groups'
+let sidebarCollapsed = false; // Track sidebar state
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -22,6 +23,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         initializeEventListeners();
         console.log('[DEBUG] Event listeners initialized');
+        
+        initializeSidebarToggle();
+        console.log('[DEBUG] Sidebar toggle initialized');
         
         startAutoRefresh();
         console.log('[DEBUG] Auto-refresh started');
@@ -436,6 +440,57 @@ function initializeEventListeners() {
     loadGroupsIntoSelect();
     
     console.log('[DEBUG] Event listeners initialized successfully');
+}
+
+// Initialize Sidebar Toggle
+function initializeSidebarToggle() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.getElementById('mainContent');
+    
+    if (!sidebarToggle) {
+        console.error('[ERROR] Sidebar toggle button not found!');
+        return;
+    }
+    
+    // Load saved state from localStorage
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    if (savedState === 'true') {
+        toggleSidebar();
+    }
+    
+    sidebarToggle.addEventListener('click', toggleSidebar);
+    
+    // Keyboard shortcut: Ctrl+B to toggle sidebar
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'b') {
+            e.preventDefault();
+            toggleSidebar();
+        }
+    });
+    
+    console.log('[DEBUG] Sidebar toggle initialized (Click button or press Ctrl+B)');
+}
+
+// Toggle Sidebar
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.getElementById('mainContent');
+    
+    sidebarCollapsed = !sidebarCollapsed;
+    
+    if (sidebarCollapsed) {
+        sidebar.classList.add('collapsed');
+        mainContent.classList.add('expanded');
+    } else {
+        sidebar.classList.remove('collapsed');
+        mainContent.classList.remove('expanded');
+    }
+    
+    // Save state to localStorage
+    localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+    
+    console.log('[DEBUG] Sidebar toggled:', sidebarCollapsed ? 'collapsed' : 'expanded');
 }
 
 // View Functions
