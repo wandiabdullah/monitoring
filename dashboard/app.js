@@ -9,7 +9,41 @@ let refreshTimer = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    loadServers();
+    // Check if host parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const hostParam = urlParams.get('host');
+    
+    if (hostParam) {
+        console.log('[DEBUG] URL host parameter detected:', hostParam);
+        // Auto-select server from URL
+        selectedServer = hostParam;
+        
+        // Show loading state
+        const detailSection = document.getElementById('detailSection');
+        const detailTitle = document.getElementById('detailTitle');
+        const closeBtn = detailSection.querySelector('.close-btn');
+        
+        detailSection.classList.add('active');
+        detailTitle.textContent = `📊 ${hostParam}`;
+        closeBtn.textContent = '← Back to Dashboard';
+        
+        // Hide server list, show detail immediately
+        const serversGrid = document.getElementById('serversGrid');
+        const serverListHeader = serversGrid.previousElementSibling;
+        
+        if (serverListHeader && serverListHeader.tagName === 'H2') {
+            serverListHeader.style.display = 'none';
+        }
+        serversGrid.style.display = 'none';
+        
+        // Load data
+        loadServers().then(() => {
+            loadServerDetail(hostParam);
+        });
+    } else {
+        loadServers();
+    }
+    
     startAutoRefresh();
 });
 
@@ -87,15 +121,42 @@ async function selectServer(hostname) {
     selectedServer = hostname;
     loadServers(); // Update selection UI
     await loadServerDetail(hostname);
-    document.getElementById('detailSection').classList.add('active');
-    document.getElementById('detailTitle').textContent = `📊 ${hostname}`;
+    
+    const detailSection = document.getElementById('detailSection');
+    const detailTitle = document.getElementById('detailTitle');
+    const closeBtn = detailSection.querySelector('.close-btn');
+    
+    detailSection.classList.add('active');
+    detailTitle.textContent = `📊 ${hostname}`;
+    
+    // Update close button text
+    closeBtn.textContent = 'Tutup';
 }
 
 // Close detail
 function closeDetail() {
     selectedServer = null;
     document.getElementById('detailSection').classList.remove('active');
-    loadServers(); // Update selection UI
+    
+    // Check if came from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const hostParam = urlParams.get('host');
+    
+    if (hostParam) {
+        // If came from URL, redirect to main dashboard
+        window.location.href = '/';
+    } else {
+        // Show server list
+        const serversGrid = document.getElementById('serversGrid');
+        const serverListHeader = serversGrid.previousElementSibling;
+        
+        if (serverListHeader && serverListHeader.tagName === 'H2') {
+            serverListHeader.style.display = 'block';
+        }
+        serversGrid.style.display = 'grid';
+        
+        loadServers(); // Update selection UI
+    }
 }
 
 // Load server detail

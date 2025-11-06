@@ -838,15 +838,8 @@ async function saveGroup() {
 // View host details
 function viewHostDetails(hostname) {
     console.log('[DEBUG] Viewing host details:', hostname);
-    // Redirect to old index.html for detailed view
-    window.location.href = `/old-dashboard?host=${hostname}`;
-}
-
-// View host details
-function viewHostDetails(hostname) {
-    console.log('[DEBUG] Viewing host details:', hostname);
-    // Redirect to old index.html for detailed view
-    window.location.href = `/old-dashboard?host=${hostname}`;
+    // Redirect to old-dashboard for detailed view
+    window.location.href = `/old-dashboard?host=${encodeURIComponent(hostname)}`;
 }
 
 // Show alert
