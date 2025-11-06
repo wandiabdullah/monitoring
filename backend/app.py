@@ -12,7 +12,15 @@ from functools import wraps
 
 app = Flask(__name__, static_folder='../dashboard', template_folder='../dashboard')
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
-CORS(app, supports_credentials=True)
+
+# Session configuration
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
+
+# CORS configuration - support credentials
+CORS(app, supports_credentials=True, origins=['*'])
 
 # In-memory storage for metrics (untuk demo, bisa diganti dengan database)
 metrics_storage = defaultdict(lambda: deque(maxlen=1000))  # Store last 1000 metrics per server
@@ -49,7 +57,7 @@ def init_db():
         )
     ''')
     
-    # Hosts table
+    # Hosts table - Updated with group support
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS hosts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,9 +65,24 @@ def init_db():
             api_key TEXT UNIQUE NOT NULL,
             description TEXT,
             ip_address TEXT,
+            group_id INTEGER,
             is_active INTEGER DEFAULT 1,
+            enable_key_mapping INTEGER DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_seen TIMESTAMP
+            last_seen TIMESTAMP,
+            FOREIGN KEY (group_id) REFERENCES groups (id)
+        )
+    ''')
+    
+    # Groups table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS groups (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            icon TEXT DEFAULT 'fa-server',
+            description TEXT,
+            color TEXT DEFAULT '#667eea',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     
@@ -143,8 +166,18 @@ def save_to_file(hostname, metrics):
 @app.route('/')
 def index():
     """Serve dashboard or redirect to login"""
+    # Check if user is logged in
     if 'user_id' not in session:
+        print(f"[AUTH] No user_id in session, redirecting to login. Session: {dict(session)}")
         return render_template('login.html')
+    
+    print(f"[AUTH] User logged in: {session.get('username')}")
+    return render_template('dashboard.html')
+
+@app.route('/old-dashboard')
+@login_required
+def old_dashboard():
+    """Serve old detailed dashboard"""
     return render_template('index.html')
 
 @app.route('/login', methods=['GET'])
@@ -287,11 +320,16 @@ def get_servers():
 @app.route('/api/hosts', methods=['GET'])
 @login_required
 def get_hosts():
-    """Get all hosts"""
+    """Get all hosts with group information"""
     db = get_db()
-    hosts = db.execute(
-        'SELECT id, hostname, description, ip_address, is_active, api_key, created_at, last_seen FROM hosts ORDER BY hostname'
-    ).fetchall()
+    hosts = db.execute('''
+        SELECT h.id, h.hostname, h.description, h.ip_address, h.is_active, 
+               h.api_key, h.created_at, h.last_seen, h.group_id,
+               g.name as group_name, g.icon as group_icon
+        FROM hosts h
+        LEFT JOIN groups g ON h.group_id = g.id
+        ORDER BY h.hostname
+    ''').fetchall()
     db.close()
     
     return jsonify([{
@@ -302,18 +340,23 @@ def get_hosts():
         'is_active': bool(host['is_active']),
         'api_key': host['api_key'],
         'created_at': host['created_at'],
-        'last_seen': host['last_seen']
+        'last_seen': host['last_seen'],
+        'group_id': host['group_id'],
+        'group_name': host['group_name'],
+        'group_icon': host['group_icon']
     } for host in hosts])
 
 
 @app.route('/api/hosts', methods=['POST'])
 @admin_required
 def add_host():
-    """Add new host"""
+    """Add new host with key mapping and group support"""
     data = request.json
     hostname = data.get('hostname')
     description = data.get('description', '')
     ip_address = data.get('ip_address', '')
+    group_id = data.get('group_id')
+    enable_key_mapping = data.get('enable_key_mapping', True)
     
     if not hostname:
         return jsonify({'error': 'Hostname required'}), 400
@@ -324,12 +367,15 @@ def add_host():
     db = get_db()
     try:
         cursor = db.execute(
-            'INSERT INTO hosts (hostname, api_key, description, ip_address) VALUES (?, ?, ?, ?)',
-            (hostname, api_key, description, ip_address)
+            '''INSERT INTO hosts (hostname, api_key, description, ip_address, group_id, enable_key_mapping) 
+               VALUES (?, ?, ?, ?, ?, ?)''',
+            (hostname, api_key, description, ip_address, group_id, 1 if enable_key_mapping else 0)
         )
         db.commit()
         host_id = cursor.lastrowid
         db.close()
+        
+        print(f"[HOST] New host added: {hostname} (Group: {group_id}, Key Mapping: {enable_key_mapping})")
         
         return jsonify({
             'id': host_id,
@@ -337,7 +383,9 @@ def add_host():
             'api_key': api_key,
             'description': description,
             'ip_address': ip_address,
-            'is_active': True
+            'group_id': group_id,
+            'is_active': True,
+            'enable_key_mapping': enable_key_mapping
         }), 201
     except sqlite3.IntegrityError:
         db.close()
@@ -420,6 +468,125 @@ def regenerate_api_key(host_id):
     db.close()
     
     return jsonify({'api_key': new_api_key})
+
+
+# Groups API
+@app.route('/api/groups', methods=['GET'])
+@login_required
+def get_groups():
+    """Get all groups"""
+    db = get_db()
+    groups = db.execute('''
+        SELECT g.*, COUNT(h.id) as host_count
+        FROM groups g
+        LEFT JOIN hosts h ON h.group_id = g.id
+        GROUP BY g.id
+        ORDER BY g.name
+    ''').fetchall()
+    db.close()
+    
+    return jsonify([{
+        'id': group['id'],
+        'name': group['name'],
+        'icon': group['icon'],
+        'description': group['description'],
+        'color': group['color'],
+        'host_count': group['host_count'],
+        'created_at': group['created_at']
+    } for group in groups])
+
+
+@app.route('/api/groups', methods=['POST'])
+@admin_required
+def add_group():
+    """Add new group"""
+    data = request.json
+    name = data.get('name')
+    icon = data.get('icon', 'fa-server')
+    description = data.get('description', '')
+    color = data.get('color', '#667eea')
+    
+    if not name:
+        return jsonify({'error': 'Group name required'}), 400
+    
+    db = get_db()
+    try:
+        cursor = db.execute(
+            'INSERT INTO groups (name, icon, description, color) VALUES (?, ?, ?, ?)',
+            (name, icon, description, color)
+        )
+        db.commit()
+        group_id = cursor.lastrowid
+        db.close()
+        
+        return jsonify({
+            'id': group_id,
+            'name': name,
+            'icon': icon,
+            'description': description,
+            'color': color
+        }), 201
+    except sqlite3.IntegrityError:
+        db.close()
+        return jsonify({'error': 'Group name already exists'}), 409
+
+
+@app.route('/api/groups/<int:group_id>', methods=['PUT'])
+@admin_required
+def update_group(group_id):
+    """Update group"""
+    data = request.json
+    
+    db = get_db()
+    group = db.execute('SELECT * FROM groups WHERE id = ?', (group_id,)).fetchone()
+    
+    if not group:
+        db.close()
+        return jsonify({'error': 'Group not found'}), 404
+    
+    name = data.get('name', group['name'])
+    icon = data.get('icon', group['icon'])
+    description = data.get('description', group['description'])
+    color = data.get('color', group['color'])
+    
+    try:
+        db.execute(
+            'UPDATE groups SET name = ?, icon = ?, description = ?, color = ? WHERE id = ?',
+            (name, icon, description, color, group_id)
+        )
+        db.commit()
+        db.close()
+        
+        return jsonify({
+            'id': group_id,
+            'name': name,
+            'icon': icon,
+            'description': description,
+            'color': color
+        })
+    except sqlite3.IntegrityError:
+        db.close()
+        return jsonify({'error': 'Group name already exists'}), 409
+
+
+@app.route('/api/groups/<int:group_id>', methods=['DELETE'])
+@admin_required
+def delete_group(group_id):
+    """Delete group (hosts will be ungrouped)"""
+    db = get_db()
+    group = db.execute('SELECT * FROM groups WHERE id = ?', (group_id,)).fetchone()
+    
+    if not group:
+        db.close()
+        return jsonify({'error': 'Group not found'}), 404
+    
+    # Ungroup all hosts in this group
+    db.execute('UPDATE hosts SET group_id = NULL WHERE group_id = ?', (group_id,))
+    db.execute('DELETE FROM groups WHERE id = ?', (group_id,))
+    db.commit()
+    db.close()
+    
+    return jsonify({'success': True})
 
 
 @app.route('/api/servers/<hostname>/current', methods=['GET'])
