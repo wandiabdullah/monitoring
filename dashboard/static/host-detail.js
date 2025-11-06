@@ -61,34 +61,42 @@ function updateHostInfo(data) {
 
 // Update stats cards
 function updateStats(data) {
+    console.log('[DEBUG] Updating stats with data:', data);
+    
     const cpu = data.cpu || {};
     const memory = data.memory || {};
     const swap = data.swap || {};
     const load = data.load_average || [0, 0, 0];
 
-    // CPU
-    document.getElementById('cpuValue').textContent = cpu.percent?.toFixed(1) + '%' || '0%';
-    document.getElementById('cpuCores').textContent = `${cpu.cores || 0} cores`;
-    document.getElementById('cpuProgress').style.width = (cpu.percent || 0) + '%';
+    try {
+        // CPU
+        document.getElementById('cpuValue').textContent = cpu.percent?.toFixed(1) + '%' || '0%';
+        document.getElementById('cpuCores').textContent = `${cpu.cores || 0} cores`;
+        document.getElementById('cpuProgress').style.width = (cpu.percent || 0) + '%';
 
-    // Memory
-    const memPercent = memory.percent || 0;
-    const memUsed = formatBytes(memory.used || 0);
-    const memTotal = formatBytes(memory.total || 0);
-    document.getElementById('memoryValue').textContent = memPercent.toFixed(1) + '%';
-    document.getElementById('memorySize').textContent = `${memUsed} / ${memTotal}`;
-    document.getElementById('memoryProgress').style.width = memPercent + '%';
+        // Memory
+        const memPercent = memory.percent || 0;
+        const memUsed = formatBytes(memory.used || 0);
+        const memTotal = formatBytes(memory.total || 0);
+        document.getElementById('memoryValue').textContent = memPercent.toFixed(1) + '%';
+        document.getElementById('memorySize').textContent = `${memUsed} / ${memTotal}`;
+        document.getElementById('memoryProgress').style.width = memPercent + '%';
 
-    // Swap
-    const swapPercent = swap.percent || 0;
-    const swapUsed = formatBytes(swap.used || 0);
-    const swapTotal = formatBytes(swap.total || 0);
-    document.getElementById('swapValue').textContent = swapPercent.toFixed(1) + '%';
-    document.getElementById('swapSize').textContent = `${swapUsed} / ${swapTotal}`;
-    document.getElementById('swapProgress').style.width = swapPercent + '%';
+        // Swap
+        const swapPercent = swap.percent || 0;
+        const swapUsed = formatBytes(swap.used || 0);
+        const swapTotal = formatBytes(swap.total || 0);
+        document.getElementById('swapValue').textContent = swapPercent.toFixed(1) + '%';
+        document.getElementById('swapSize').textContent = `${swapUsed} / ${swapTotal}`;
+        document.getElementById('swapProgress').style.width = swapPercent + '%';
 
-    // Load Average
-    document.getElementById('loadValue').textContent = load[0]?.toFixed(2) || '0.0';
+        // Load Average
+        document.getElementById('loadValue').textContent = load[0]?.toFixed(2) || '0.0';
+        
+        console.log('[DEBUG] Stats updated successfully');
+    } catch (error) {
+        console.error('[ERROR] Error updating stats:', error);
+    }
 }
 
 // Update disk list
@@ -312,77 +320,120 @@ async function fetchCurrentData() {
 // Fetch history data
 async function fetchHistoryData() {
     try {
+        console.log('[DEBUG] Fetching history data for:', hostname);
         const response = await fetch(`/api/servers/${hostname}/history`);
+        console.log('[DEBUG] History data response status:', response.status);
+        
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        console.log('[DEBUG] History data received, items:', data.length);
         updateHistoryChart(data);
     } catch (error) {
-        console.error('Error fetching history data:', error);
+        console.error('[ERROR] Error fetching history data:', error);
     }
 }
 
 // Fetch disk data
 async function fetchDiskData() {
     try {
+        console.log('[DEBUG] Fetching disk data for:', hostname);
         const response = await fetch(`/api/servers/${hostname}/disk`);
+        console.log('[DEBUG] Disk data response status:', response.status);
+        
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        console.log('[DEBUG] Disk data received, partitions:', data.length);
         updateDiskList(data);
     } catch (error) {
-        console.error('Error fetching disk data:', error);
+        console.error('[ERROR] Error fetching disk data:', error);
     }
 }
 
 // Fetch network data
 async function fetchNetworkData() {
     try {
+        console.log('[DEBUG] Fetching network data for:', hostname);
         const response = await fetch(`/api/servers/${hostname}/network`);
+        console.log('[DEBUG] Network data response status:', response.status);
+        
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        console.log('[DEBUG] Network data received, items:', data.length);
         updateNetworkChart(data);
     } catch (error) {
-        console.error('Error fetching network data:', error);
+        console.error('[ERROR] Error fetching network data:', error);
     }
 }
 
 // Fetch all data
 async function fetchAllData() {
-    await Promise.all([
-        fetchCurrentData(),
-        fetchHistoryData(),
-        fetchDiskData(),
-        fetchNetworkData()
-    ]);
+    console.log('[DEBUG] Starting fetchAllData for hostname:', hostname);
+    try {
+        await Promise.allSettled([
+            fetchCurrentData(),
+            fetchHistoryData(),
+            fetchDiskData(),
+            fetchNetworkData()
+        ]);
+        console.log('[DEBUG] All fetch operations completed');
+    } catch (error) {
+        console.error('[ERROR] Error in fetchAllData:', error);
+    }
 }
 
 // Initialize page
 async function init() {
-    hostname = getHostnameFromURL();
-    
-    if (!hostname) {
-        alert('No host specified in URL');
-        window.location.href = '/';
-        return;
+    try {
+        console.log('[DEBUG] Starting initialization...');
+        
+        hostname = getHostnameFromURL();
+        console.log('[DEBUG] Hostname from URL:', hostname);
+        
+        if (!hostname) {
+            alert('No host specified in URL');
+            window.location.href = '/';
+            return;
+        }
+
+        // Update page title
+        document.getElementById('hostName').textContent = hostname;
+        document.getElementById('hostSubtitle').textContent = `Monitoring ${hostname}`;
+        document.title = `${hostname} - Host Monitoring`;
+
+        // Initialize charts
+        console.log('[DEBUG] Initializing charts...');
+        initHistoryChart();
+        initNetworkChart();
+
+        // Show content first, hide loading - so user can see something even if fetch fails
+        console.log('[DEBUG] Showing content area...');
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('contentArea').style.display = 'block';
+
+        // Fetch initial data
+        console.log('[DEBUG] Fetching initial data...');
+        await fetchAllData();
+        console.log('[DEBUG] Initial data fetch complete');
+
+        // Start auto-refresh (every 5 seconds)
+        updateInterval = setInterval(fetchAllData, 5000);
+        console.log('[DEBUG] Initialization complete');
+        
+    } catch (error) {
+        console.error('[ERROR] Error during initialization:', error);
+        
+        // Still show content area with error message
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('contentArea').style.display = 'block';
+        
+        // Show error notification
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #e74c3c; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 9999;';
+        errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <strong>Error:</strong> ${error.message}`;
+        document.body.appendChild(errorDiv);
+        
+        setTimeout(() => errorDiv.remove(), 5000);
     }
-
-    // Update page title
-    document.getElementById('hostName').textContent = hostname;
-    document.getElementById('hostSubtitle').textContent = `Monitoring ${hostname}`;
-    document.title = `${hostname} - Host Monitoring`;
-
-    // Initialize charts
-    initHistoryChart();
-    initNetworkChart();
-
-    // Fetch initial data
-    await fetchAllData();
-
-    // Show content, hide loading
-    document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('contentArea').style.display = 'block';
-
-    // Start auto-refresh (every 5 seconds)
-    updateInterval = setInterval(fetchAllData, 5000);
 }
 
 // Refresh button
