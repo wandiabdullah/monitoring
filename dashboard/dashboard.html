@@ -946,6 +946,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-    <script src="dashboard.js"></script>
+    <!-- Load frontend script from Flask static folder to avoid routing conflicts -->
+    <script src="/static/dashboard.js"></script>
 </body>
 </html>
