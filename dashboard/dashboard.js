@@ -4,6 +4,8 @@ let currentUser = null;
 let groups = [];
 let hosts = [];
 let refreshInterval = null;
+let expandedGroups = new Set(); // Track which groups are expanded
+let currentView = 'dashboard'; // Track current view: 'dashboard', 'allhosts', 'groups'
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -112,7 +114,8 @@ async function loadHosts() {
             });
         }
         
-        renderGroups();
+        // Re-render current view to update data
+        refreshCurrentView();
         updateStats();
     } catch (error) {
         console.error('Error loading hosts:', error);
@@ -208,6 +211,22 @@ function renderGroups() {
         
         container.appendChild(ungroupedCard);
     }
+    
+    // Restore expanded state after render
+    restoreExpandedState();
+}
+
+// Restore expanded state for groups
+function restoreExpandedState() {
+    expandedGroups.forEach(groupId => {
+        const hostsContainer = document.getElementById(`hosts-${groupId}`);
+        const toggle = document.getElementById(`toggle-${groupId}`);
+        
+        if (hostsContainer && toggle) {
+            hostsContainer.classList.add('expanded');
+            toggle.classList.remove('collapsed');
+        }
+    });
 }
 
 // Render hosts in a group
@@ -261,9 +280,11 @@ function toggleGroup(groupId) {
     if (hostsContainer.classList.contains('expanded')) {
         hostsContainer.classList.remove('expanded');
         toggle.classList.add('collapsed');
+        expandedGroups.delete(groupId); // Remove from expanded set
     } else {
         hostsContainer.classList.add('expanded');
         toggle.classList.remove('collapsed');
+        expandedGroups.add(groupId); // Add to expanded set
     }
 }
 
@@ -277,6 +298,25 @@ function updateStats() {
     document.getElementById('onlineHosts').textContent = online;
     document.getElementById('offlineHosts').textContent = offline;
     document.getElementById('totalGroups').textContent = groups.length;
+}
+
+// Refresh current view (called during auto-refresh)
+function refreshCurrentView() {
+    console.log('[DEBUG] Refreshing current view:', currentView);
+    
+    switch (currentView) {
+        case 'dashboard':
+            renderGroups();
+            break;
+        case 'allhosts':
+            showAllHostsView();
+            break;
+        case 'groups':
+            showGroupsView();
+            break;
+        default:
+            renderGroups();
+    }
 }
 
 // Initialize event listeners
@@ -379,12 +419,14 @@ function initializeEventListeners() {
 // View Functions
 function showDashboardView() {
     console.log('[DEBUG] Showing dashboard view');
+    currentView = 'dashboard';
     document.getElementById('pageTitle').textContent = 'Dashboard Overview';
     renderGroups();
 }
 
 function showAllHostsView() {
     console.log('[DEBUG] Showing all hosts view');
+    currentView = 'allhosts';
     document.getElementById('pageTitle').textContent = 'All Hosts';
     const container = document.getElementById('groupsList');
     
@@ -402,7 +444,7 @@ function showAllHostsView() {
         return;
     }
     
-    // Show all hosts in a single card
+    // Show all hosts in a single card - always expanded
     const allHostsCard = `
         <div class="group-card">
             <div class="group-header">
@@ -426,7 +468,7 @@ function showAllHostsView() {
                     </div>
                 </div>
             </div>
-            <div class="group-hosts expanded">
+            <div class="group-hosts expanded" style="max-height: none !important;">
                 ${renderHosts(hosts)}
             </div>
         </div>
@@ -437,6 +479,7 @@ function showAllHostsView() {
 
 function showGroupsView() {
     console.log('[DEBUG] Showing groups view');
+    currentView = 'groups';
     document.getElementById('pageTitle').textContent = 'Manage Groups';
     const container = document.getElementById('groupsList');
     
