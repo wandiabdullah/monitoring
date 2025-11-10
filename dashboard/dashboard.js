@@ -2183,10 +2183,12 @@ window.hideAddUserForm = hideAddUserForm;
 window.deleteUser = deleteUser;
 
 // Alert Management Functions
+window.loadAlertConfig = loadAlertConfig;
 window.showAddChannelModal = showAddChannelModal;
 window.closeChannelModal = closeChannelModal;
 window.updateChannelForm = updateChannelForm;
 window.updateWhatsAppForm = updateWhatsAppForm;
+window.saveChannel = saveChannel;
 window.testChannel = testChannel;
 window.testChannelById = testChannelById;
 window.deleteChannel = deleteChannel;
