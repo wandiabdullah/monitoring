@@ -1051,6 +1051,64 @@ def delete_notification_channel_endpoint(channel_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/alerts/channels/<int:channel_id>/test', methods=['POST'])
+@admin_required
+def test_notification_channel_by_id(channel_id):
+    """Test notification channel by ID"""
+    try:
+        print(f"[DEBUG] Test notification for channel ID: {channel_id}")
+        
+        # Get channel from database
+        channels = alert_system.get_notification_channels()
+        channel = next((c for c in channels if c['id'] == channel_id), None)
+        
+        if not channel:
+            print(f"[ERROR] Channel not found: {channel_id}")
+            return jsonify({'error': 'Channel not found'}), 404
+        
+        channel_type = channel['type']
+        config = channel['config']
+        
+        print(f"[DEBUG] Testing {channel_type} channel '{channel.get('name', 'Unnamed')}' with config keys: {list(config.keys())}")
+        
+        test_message = f"""
+Test Alert from Server Monitoring System
+
+This is a test notification to verify your {channel_type.upper()} configuration.
+
+If you received this message, your notification channel is working correctly!
+
+Channel: {channel.get('name', 'Unnamed')}
+Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC
+        """.strip()
+        
+        success = False
+        if channel_type == 'email':
+            print("[DEBUG] Calling send_email_notification")
+            success = alert_system.send_email_notification(config, 'Test Alert', test_message)
+        elif channel_type == 'telegram':
+            print("[DEBUG] Calling send_telegram_notification")
+            success = alert_system.send_telegram_notification(config, test_message)
+        elif channel_type == 'whatsapp':
+            print("[DEBUG] Calling send_whatsapp_notification")
+            success = alert_system.send_whatsapp_notification(config, test_message)
+        else:
+            print(f"[ERROR] Unknown channel type: {channel_type}")
+            return jsonify({'error': f'Unknown channel type: {channel_type}'}), 400
+        
+        print(f"[DEBUG] Notification send result: {success}")
+        
+        if success:
+            return jsonify({'success': True, 'message': f'Test notification sent to {channel_type}'})
+        else:
+            return jsonify({'error': 'Failed to send test notification. Check server logs for details.'}), 500
+            
+    except Exception as e:
+        print(f"[ERROR] Exception in test_notification_channel_by_id: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/alerts/test', methods=['POST'])
 @admin_required
 def test_notification_endpoint():

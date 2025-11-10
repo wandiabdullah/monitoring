@@ -610,6 +610,19 @@ function showDashboardView() {
 
 function showAllHostsView() {
     console.log('[DEBUG] Showing all hosts view');
+    
+    // Hide all other content views first
+    const allViews = document.querySelectorAll('.content-view');
+    allViews.forEach(view => {
+        view.style.display = 'none';
+    });
+    
+    // Show dashboard view (which contains groupsList)
+    const dashboardView = document.getElementById('dashboardView');
+    if (dashboardView) {
+        dashboardView.style.display = 'block';
+    }
+    
     currentView = 'allhosts';
     document.getElementById('pageTitle').textContent = 'All Hosts';
     const container = document.getElementById('groupsList');
@@ -663,6 +676,19 @@ function showAllHostsView() {
 
 function showGroupsView() {
     console.log('[DEBUG] Showing groups view');
+    
+    // Hide all other content views first
+    const allViews = document.querySelectorAll('.content-view');
+    allViews.forEach(view => {
+        view.style.display = 'none';
+    });
+    
+    // Show dashboard view (which contains groupsList)
+    const dashboardView = document.getElementById('dashboardView');
+    if (dashboardView) {
+        dashboardView.style.display = 'block';
+    }
+    
     currentView = 'groups';
     document.getElementById('pageTitle').textContent = 'Manage Groups';
     const container = document.getElementById('groupsList');
@@ -838,6 +864,19 @@ function attachGroupToggleListeners() {
 
 function showSettingsView() {
     console.log('[DEBUG] Showing settings view');
+    
+    // Hide all other content views first
+    const allViews = document.querySelectorAll('.content-view');
+    allViews.forEach(view => {
+        view.style.display = 'none';
+    });
+    
+    // Show dashboard view (which contains groupsList)
+    const dashboardView = document.getElementById('dashboardView');
+    if (dashboardView) {
+        dashboardView.style.display = 'block';
+    }
+    
     document.getElementById('pageTitle').textContent = 'Settings';
     const container = document.getElementById('groupsList');
     
@@ -2021,6 +2060,7 @@ async function testChannel() {
 // Test channel by ID
 async function testChannelById(channelId) {
     try {
+        console.log('[DEBUG] Testing channel ID:', channelId);
         showToast('Sending test notification...', 'info');
         
         const response = await fetch(`/api/alerts/channels/${channelId}/test`, {
@@ -2028,7 +2068,15 @@ async function testChannelById(channelId) {
             credentials: 'include'
         });
         
+        console.log('[DEBUG] Test response status:', response.status);
         const result = await response.json();
+        console.log('[DEBUG] Test result:', result);
+        
+        if (!response.ok) {
+            console.error('[ERROR] Test failed with status:', response.status, result);
+            showToast('Test failed: ' + (result.error || 'Server error'), 'error');
+            return;
+        }
         
         if (result.success) {
             showToast('Test notification sent successfully!', 'success');
@@ -2036,8 +2084,8 @@ async function testChannelById(channelId) {
             showToast('Test failed: ' + (result.error || 'Unknown error'), 'error');
         }
     } catch (error) {
-        console.error('Error testing channel:', error);
-        showToast('Failed to send test notification', 'error');
+        console.error('[ERROR] Exception in testChannelById:', error);
+        showToast('Error: ' + error.message, 'error');
     }
 }
 
