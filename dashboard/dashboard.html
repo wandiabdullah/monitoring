@@ -892,6 +892,21 @@
             color: #666;
         }
 
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-secondary {
+            background: #e0e0e0;
+            color: #666;
+        }
+
         .action-btn {
             padding: 6px 12px;
             border: none;
@@ -908,6 +923,32 @@
 
         .action-btn.danger:hover {
             background: #fcc;
+        }
+
+        /* Channel Modal Additional Styles */
+        .channel-config {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .channel-config.active {
+            display: block;
+        }
+
+        #channelModal .modal-content {
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        .form-section-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #667eea;
         }
     </style>
 </head>
@@ -960,6 +1001,12 @@
 
         <div class="menu-section">Settings</div>
         <ul class="sidebar-menu">
+            <li class="menu-item">
+                <a href="#" class="menu-link" data-view="alerts">
+                    <i class="fas fa-bell"></i>
+                    <span>Alert Settings</span>
+                </a>
+            </li>
             <li class="menu-item">
                 <a href="#" class="menu-link" data-view="account">
                     <i class="fas fa-user-circle"></i>
@@ -1404,8 +1451,300 @@
         </div>
     </div>
 
+    <!-- Alert Settings View -->
+    <div id="alertsView" class="content-view" style="display: none;">
+        <div class="view-header">
+            <h1><i class="fas fa-bell"></i> Alert Settings</h1>
+            <p>Configure alert rules and notification channels</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Alert Statistics Cards -->
+            <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="stat-info">
+                    <div class="stat-label">Total Alerts Today</div>
+                    <div class="stat-value" id="alertTotalToday">0</div>
+                </div>
+            </div>
+
+            <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="stat-icon"><i class="fas fa-bell-slash"></i></div>
+                <div class="stat-info">
+                    <div class="stat-label">Unresolved Alerts</div>
+                    <div class="stat-value" id="alertUnresolved">0</div>
+                </div>
+            </div>
+
+            <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="stat-icon"><i class="fas fa-paper-plane"></i></div>
+                <div class="stat-info">
+                    <div class="stat-label">Active Channels</div>
+                    <div class="stat-value" id="alertActiveChannels">0</div>
+                </div>
+            </div>
+
+            <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-info">
+                    <div class="stat-label">System Status</div>
+                    <div class="stat-value" id="alertSystemStatus">Active</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Configuration -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-sliders-h"></i> Alert Rules Configuration</h2>
+            </div>
+            <div class="card-body">
+                <form id="alertConfigForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="alertEnabled" checked>
+                                Enable Alert System
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="serverDownTimeout">
+                                <i class="fas fa-server"></i> Server Down Timeout (seconds)
+                            </label>
+                            <input type="number" id="serverDownTimeout" value="60" min="30" max="300">
+                            <small>Alert when no data received for this duration</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cpuThreshold">
+                                <i class="fas fa-microchip"></i> CPU Threshold (%)
+                            </label>
+                            <input type="number" id="cpuThreshold" value="70" min="50" max="100">
+                            <small>Alert when CPU usage exceeds this percentage</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="diskThreshold">
+                                <i class="fas fa-hdd"></i> Disk Threshold (%)
+                            </label>
+                            <input type="number" id="diskThreshold" value="90" min="50" max="100">
+                            <small>Alert when disk usage exceeds this percentage</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="memoryThreshold">
+                                <i class="fas fa-memory"></i> Memory Threshold (%)
+                            </label>
+                            <input type="number" id="memoryThreshold" value="90" min="50" max="100">
+                            <small>Alert when memory usage exceeds this percentage</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="networkTimeout">
+                                <i class="fas fa-network-wired"></i> Network Timeout (seconds)
+                            </label>
+                            <input type="number" id="networkTimeout" value="60" min="30" max="300">
+                            <small>Alert when network not responding for this duration</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cooldownPeriod">
+                                <i class="fas fa-clock"></i> Cooldown Period (seconds)
+                            </label>
+                            <input type="number" id="cooldownPeriod" value="300" min="60" max="3600">
+                            <small>Minimum time between duplicate alerts</small>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Configuration
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="loadAlertConfig()">
+                            <i class="fas fa-undo"></i> Reset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Notification Channels -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-paper-plane"></i> Notification Channels</h2>
+                <button class="btn btn-primary btn-sm" onclick="showAddChannelModal()">
+                    <i class="fas fa-plus"></i> Add Channel
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="channelsList">
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        <i class="fas fa-spinner fa-spin"></i> Loading channels...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert History -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-history"></i> Recent Alerts</h2>
+                <button class="btn btn-secondary btn-sm" onclick="loadAlertHistory()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="alertHistoryList">
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        <i class="fas fa-spinner fa-spin"></i> Loading alert history...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Notification Channel Modal -->
+    <div id="channelModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-paper-plane"></i> <span id="channelModalTitle">Add Notification Channel</span></h2>
+                <button class="modal-close" onclick="closeChannelModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="channelForm">
+                    <div class="form-group">
+                        <label for="channelType">Channel Type</label>
+                        <select id="channelType" required onchange="updateChannelForm()">
+                            <option value="">Select channel type...</option>
+                            <option value="email">Email (SMTP)</option>
+                            <option value="telegram">Telegram Bot</option>
+                            <option value="whatsapp">WhatsApp</option>
+                        </select>
+                    </div>
+
+                    <!-- Email Configuration -->
+                    <div id="emailConfig" class="channel-config" style="display: none;">
+                        <h3><i class="fas fa-envelope"></i> Email Configuration</h3>
+                        <div class="form-group">
+                            <label for="smtpServer">SMTP Server</label>
+                            <input type="text" id="smtpServer" placeholder="smtp.gmail.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="smtpPort">SMTP Port</label>
+                            <input type="number" id="smtpPort" value="587">
+                        </div>
+                        <div class="form-group">
+                            <label for="smtpUsername">Username/Email</label>
+                            <input type="text" id="smtpUsername" placeholder="your-email@gmail.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="smtpPassword">Password/App Password</label>
+                            <input type="password" id="smtpPassword" placeholder="App Password">
+                            <small><a href="https://myaccount.google.com/apppasswords" target="_blank">Get Gmail App Password</a></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="fromEmail">From Email</label>
+                            <input type="email" id="fromEmail" placeholder="your-email@gmail.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="toEmails">To Emails (comma separated)</label>
+                            <input type="text" id="toEmails" placeholder="admin@company.com, alert@company.com">
+                        </div>
+                    </div>
+
+                    <!-- Telegram Configuration -->
+                    <div id="telegramConfig" class="channel-config" style="display: none;">
+                        <h3><i class="fab fa-telegram"></i> Telegram Configuration</h3>
+                        <div class="form-group">
+                            <label for="botToken">Bot Token</label>
+                            <input type="text" id="botToken" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz">
+                            <small><a href="https://t.me/BotFather" target="_blank">Create bot with @BotFather</a></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="chatId">Chat ID</label>
+                            <input type="text" id="chatId" placeholder="123456789">
+                            <small>Send /start to bot, then get chat ID from bot updates</small>
+                        </div>
+                    </div>
+
+                    <!-- WhatsApp Configuration -->
+                    <div id="whatsappConfig" class="channel-config" style="display: none;">
+                        <h3><i class="fab fa-whatsapp"></i> WhatsApp Configuration</h3>
+                        <div class="form-group">
+                            <label for="whatsappProvider">Provider</label>
+                            <select id="whatsappProvider" onchange="updateWhatsAppForm()">
+                                <option value="fonnte">Fonnte (Indonesia)</option>
+                                <option value="twilio">Twilio (International)</option>
+                            </select>
+                        </div>
+
+                        <!-- Fonnte Config -->
+                        <div id="fonnte Config" class="provider-config">
+                            <div class="form-group">
+                                <label for="fonnte ApiKey">API Key</label>
+                                <input type="text" id="fonnteApiKey" placeholder="Your Fonnte API Key">
+                                <small><a href="https://fonnte.com" target="_blank">Get API key from Fonnte.com</a></small>
+                            </div>
+                            <div class="form-group">
+                                <label for="fonnteTarget">Target Number</label>
+                                <input type="text" id="fonnteTarget" placeholder="6281234567890">
+                                <small>Without + or "whatsapp:" prefix</small>
+                            </div>
+                        </div>
+
+                        <!-- Twilio Config -->
+                        <div id="twilioConfig" class="provider-config" style="display: none;">
+                            <div class="form-group">
+                                <label for="twilioAccountSid">Account SID</label>
+                                <input type="text" id="twilioAccountSid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                            </div>
+                            <div class="form-group">
+                                <label for="twilioAuthToken">Auth Token</label>
+                                <input type="password" id="twilioAuthToken" placeholder="Your auth token">
+                            </div>
+                            <div class="form-group">
+                                <label for="twilioFromNumber">From Number</label>
+                                <input type="text" id="twilioFromNumber" placeholder="whatsapp:+14155238886">
+                            </div>
+                            <div class="form-group">
+                                <label for="twilioToNumber">To Number</label>
+                                <input type="text" id="twilioToNumber" placeholder="whatsapp:+6281234567890">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="channelEnabled" checked>
+                            Enable this channel
+                        </label>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Channel
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="testChannel()">
+                            <i class="fas fa-paper-plane"></i> Test Notification
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="closeChannelModal()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <!-- Load frontend script from Flask static folder to avoid routing conflicts -->
-    <script src="/static/dashboard.js?v=20251110001"></script>
+    <script src="/static/dashboard.js?v=20251110002"></script>
 </body>
 </html>

@@ -429,6 +429,8 @@ function initializeEventListeners() {
                 openModal('addGroupModal');
             } else if (view === 'account') {
                 showAccountSettings();
+            } else if (view === 'alerts') {
+                showAlertsView();
             } else if (view === 'users') {
                 showUserManagement();
             } else if (view === 'settings') {
@@ -1489,6 +1491,21 @@ function showUserManagement() {
     document.getElementById('createUserForm').onsubmit = handleCreateUser;
 }
 
+// Show Alerts View
+function showAlertsView() {
+    console.log('[DEBUG] Showing Alerts View');
+    
+    // Hide all views
+    document.querySelectorAll('.content-view').forEach(view => view.style.display = 'none');
+    
+    // Show alerts view
+    const alertsView = document.getElementById('alertsView');
+    if (alertsView) {
+        alertsView.style.display = 'block';
+        initializeAlertsView();
+    }
+}
+
 // Load all users
 async function loadUsers() {
     const tbody = document.getElementById('userListBody');
@@ -1599,6 +1616,492 @@ function hideAddUserForm() {
     document.getElementById('createUserForm').reset();
 }
 
+// ==================== ALERT MANAGEMENT ====================
+
+// Load alert configuration
+async function loadAlertConfig() {
+    try {
+        const response = await fetch('/api/alerts/config');
+        if (!response.ok) throw new Error('Failed to load alert config');
+        
+        const config = await response.json();
+        
+        // Update form fields
+        document.getElementById('alertEnabled').checked = config.enabled == 1;
+        document.getElementById('serverDownTimeout').value = config.server_down_timeout || 60;
+        document.getElementById('cpuThreshold').value = config.cpu_threshold || 70;
+        document.getElementById('diskThreshold').value = config.disk_threshold || 90;
+        document.getElementById('memoryThreshold').value = config.memory_threshold || 90;
+        document.getElementById('networkTimeout').value = config.network_timeout || 60;
+        document.getElementById('cooldownPeriod').value = config.cooldown_period || 300;
+        
+        showToast('Alert configuration loaded', 'success');
+    } catch (error) {
+        console.error('Error loading alert config:', error);
+        showToast('Failed to load alert configuration', 'error');
+    }
+}
+
+// Save alert configuration
+async function saveAlertConfig(event) {
+    event.preventDefault();
+    
+    const config = {
+        enabled: document.getElementById('alertEnabled').checked ? 1 : 0,
+        server_down_timeout: parseInt(document.getElementById('serverDownTimeout').value),
+        cpu_threshold: parseInt(document.getElementById('cpuThreshold').value),
+        disk_threshold: parseInt(document.getElementById('diskThreshold').value),
+        memory_threshold: parseInt(document.getElementById('memoryThreshold').value),
+        network_timeout: parseInt(document.getElementById('networkTimeout').value),
+        cooldown_period: parseInt(document.getElementById('cooldownPeriod').value)
+    };
+    
+    try {
+        const response = await fetch('/api/alerts/config', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(config)
+        });
+        
+        if (!response.ok) throw new Error('Failed to save config');
+        
+        showToast('Alert configuration saved successfully!', 'success');
+        loadAlertStats();
+    } catch (error) {
+        console.error('Error saving alert config:', error);
+        showToast('Failed to save alert configuration', 'error');
+    }
+}
+
+// Load notification channels
+async function loadNotificationChannels() {
+    try {
+        const response = await fetch('/api/alerts/channels');
+        if (!response.ok) throw new Error('Failed to load channels');
+        
+        const channels = await response.json();
+        const container = document.getElementById('channelsList');
+        
+        if (channels.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #999;">
+                    <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 10px;"></i>
+                    <p>No notification channels configured yet</p>
+                    <button class="btn btn-primary" onclick="showAddChannelModal()">
+                        <i class="fas fa-plus"></i> Add Your First Channel
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = channels.map(channel => {
+            const config = JSON.parse(channel.config);
+            const icons = {
+                email: 'fa-envelope',
+                telegram: 'fa-telegram',
+                whatsapp: 'fa-whatsapp'
+            };
+            
+            let details = '';
+            if (channel.channel_type === 'email') {
+                details = config.to_emails ? config.to_emails.join(', ') : 'N/A';
+            } else if (channel.channel_type === 'telegram') {
+                details = `Chat ID: ${config.chat_id || 'N/A'}`;
+            } else if (channel.channel_type === 'whatsapp') {
+                details = config.provider === 'fonnte' 
+                    ? `Fonnte: ${config.target || 'N/A'}`
+                    : `Twilio: ${config.to_number || 'N/A'}`;
+            }
+            
+            return `
+                <div class="channel-item" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <i class="fab ${icons[channel.channel_type] || 'fa-bell'}" style="font-size: 24px; color: #667eea;"></i>
+                        <div>
+                            <div style="font-weight: 600; text-transform: capitalize;">${channel.channel_type}</div>
+                            <div style="font-size: 13px; color: #6b7280;">${details}</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span class="badge ${channel.enabled ? 'badge-success' : 'badge-secondary'}">
+                            ${channel.enabled ? 'Enabled' : 'Disabled'}
+                        </span>
+                        <button class="btn btn-sm btn-secondary" onclick="testChannelById(${channel.id})" title="Test">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteChannel(${channel.id})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Update stats
+        const activeCount = channels.filter(c => c.enabled).length;
+        document.getElementById('alertActiveChannels').textContent = activeCount;
+        
+    } catch (error) {
+        console.error('Error loading channels:', error);
+        document.getElementById('channelsList').innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #f56565;">
+                <i class="fas fa-exclamation-triangle"></i> Failed to load channels
+            </div>
+        `;
+    }
+}
+
+// Show add channel modal
+function showAddChannelModal() {
+    document.getElementById('channelModalTitle').textContent = 'Add Notification Channel';
+    document.getElementById('channelForm').reset();
+    document.getElementById('channelModal').style.display = 'flex';
+    updateChannelForm();
+}
+
+// Close channel modal
+function closeChannelModal() {
+    document.getElementById('channelModal').style.display = 'none';
+}
+
+// Update channel form based on selected type
+function updateChannelForm() {
+    const type = document.getElementById('channelType').value;
+    
+    // Hide all configs
+    document.querySelectorAll('.channel-config').forEach(el => el.style.display = 'none');
+    
+    // Show selected config
+    if (type === 'email') {
+        document.getElementById('emailConfig').style.display = 'block';
+    } else if (type === 'telegram') {
+        document.getElementById('telegramConfig').style.display = 'block';
+    } else if (type === 'whatsapp') {
+        document.getElementById('whatsappConfig').style.display = 'block';
+        updateWhatsAppForm();
+    }
+}
+
+// Update WhatsApp form based on provider
+function updateWhatsAppForm() {
+    const provider = document.getElementById('whatsappProvider').value;
+    document.getElementById('fonnteConfig').style.display = provider === 'fonnte' ? 'block' : 'none';
+    document.getElementById('twilioConfig').style.display = provider === 'twilio' ? 'block' : 'none';
+}
+
+// Save notification channel
+async function saveChannel(event) {
+    event.preventDefault();
+    
+    const type = document.getElementById('channelType').value;
+    if (!type) {
+        showToast('Please select a channel type', 'error');
+        return;
+    }
+    
+    let config = {};
+    
+    if (type === 'email') {
+        const toEmails = document.getElementById('toEmails').value.split(',').map(e => e.trim());
+        config = {
+            smtp_server: document.getElementById('smtpServer').value,
+            smtp_port: parseInt(document.getElementById('smtpPort').value),
+            username: document.getElementById('smtpUsername').value,
+            password: document.getElementById('smtpPassword').value,
+            from_email: document.getElementById('fromEmail').value,
+            to_emails: toEmails
+        };
+    } else if (type === 'telegram') {
+        config = {
+            bot_token: document.getElementById('botToken').value,
+            chat_id: document.getElementById('chatId').value
+        };
+    } else if (type === 'whatsapp') {
+        const provider = document.getElementById('whatsappProvider').value;
+        if (provider === 'fonnte') {
+            config = {
+                provider: 'fonnte',
+                api_key: document.getElementById('fonnteApiKey').value,
+                target: document.getElementById('fonnteTarget').value
+            };
+        } else {
+            config = {
+                provider: 'twilio',
+                account_sid: document.getElementById('twilioAccountSid').value,
+                auth_token: document.getElementById('twilioAuthToken').value,
+                from_number: document.getElementById('twilioFromNumber').value,
+                to_number: document.getElementById('twilioToNumber').value
+            };
+        }
+    }
+    
+    const data = {
+        channel_type: type,
+        config: config,
+        enabled: document.getElementById('channelEnabled').checked ? 1 : 0
+    };
+    
+    try {
+        const response = await fetch('/api/alerts/channels', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) throw new Error('Failed to save channel');
+        
+        showToast('Notification channel saved successfully!', 'success');
+        closeChannelModal();
+        loadNotificationChannels();
+    } catch (error) {
+        console.error('Error saving channel:', error);
+        showToast('Failed to save notification channel', 'error');
+    }
+}
+
+// Test notification channel
+async function testChannel() {
+    const type = document.getElementById('channelType').value;
+    if (!type) {
+        showToast('Please select and configure a channel first', 'error');
+        return;
+    }
+    
+    let config = {};
+    
+    if (type === 'email') {
+        const toEmails = document.getElementById('toEmails').value.split(',').map(e => e.trim());
+        config = {
+            smtp_server: document.getElementById('smtpServer').value,
+            smtp_port: parseInt(document.getElementById('smtpPort').value),
+            username: document.getElementById('smtpUsername').value,
+            password: document.getElementById('smtpPassword').value,
+            from_email: document.getElementById('fromEmail').value,
+            to_emails: toEmails
+        };
+    } else if (type === 'telegram') {
+        config = {
+            bot_token: document.getElementById('botToken').value,
+            chat_id: document.getElementById('chatId').value
+        };
+    } else if (type === 'whatsapp') {
+        const provider = document.getElementById('whatsappProvider').value;
+        if (provider === 'fonnte') {
+            config = {
+                provider: 'fonnte',
+                api_key: document.getElementById('fonnteApiKey').value,
+                target: document.getElementById('fonnteTarget').value
+            };
+        } else {
+            config = {
+                provider: 'twilio',
+                account_sid: document.getElementById('twilioAccountSid').value,
+                auth_token: document.getElementById('twilioAuthToken').value,
+                from_number: document.getElementById('twilioFromNumber').value,
+                to_number: document.getElementById('twilioToNumber').value
+            };
+        }
+    }
+    
+    try {
+        showToast('Sending test notification...', 'info');
+        
+        const response = await fetch('/api/alerts/test', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({channel_type: type, config: config})
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Test notification sent successfully! Check your ' + type, 'success');
+        } else {
+            showToast('Test failed: ' + (result.error || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('Error testing channel:', error);
+        showToast('Failed to send test notification', 'error');
+    }
+}
+
+// Test channel by ID
+async function testChannelById(channelId) {
+    try {
+        showToast('Sending test notification...', 'info');
+        
+        const response = await fetch(`/api/alerts/channels/${channelId}/test`, {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Test notification sent successfully!', 'success');
+        } else {
+            showToast('Test failed: ' + (result.error || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('Error testing channel:', error);
+        showToast('Failed to send test notification', 'error');
+    }
+}
+
+// Delete notification channel
+async function deleteChannel(channelId) {
+    if (!confirm('Are you sure you want to delete this notification channel?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/alerts/channels/${channelId}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) throw new Error('Failed to delete channel');
+        
+        showToast('Notification channel deleted successfully', 'success');
+        loadNotificationChannels();
+    } catch (error) {
+        console.error('Error deleting channel:', error);
+        showToast('Failed to delete notification channel', 'error');
+    }
+}
+
+// Load alert statistics
+async function loadAlertStats() {
+    try {
+        const response = await fetch('/api/alerts/stats');
+        if (!response.ok) throw new Error('Failed to load stats');
+        
+        const stats = await response.json();
+        
+        document.getElementById('alertTotalToday').textContent = stats.total_today || 0;
+        document.getElementById('alertUnresolved').textContent = stats.unresolved || 0;
+        
+        // Update system status
+        const configResponse = await fetch('/api/alerts/config');
+        const config = await configResponse.json();
+        document.getElementById('alertSystemStatus').textContent = config.enabled ? 'Active' : 'Disabled';
+        
+    } catch (error) {
+        console.error('Error loading alert stats:', error);
+    }
+}
+
+// Load alert history
+async function loadAlertHistory() {
+    try {
+        const response = await fetch('/api/alerts/history?limit=20');
+        if (!response.ok) throw new Error('Failed to load history');
+        
+        const alerts = await response.json();
+        const container = document.getElementById('alertHistoryList');
+        
+        if (alerts.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #999;">
+                    <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 10px; color: #48bb78;"></i>
+                    <p>No alerts yet. System is monitoring...</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = `
+            <div style="max-height: 400px; overflow-y: auto;">
+                ${alerts.map(alert => {
+                    const severityColors = {
+                        critical: '#f56565',
+                        warning: '#ed8936',
+                        info: '#4299e1'
+                    };
+                    
+                    const severityIcons = {
+                        critical: 'fa-exclamation-triangle',
+                        warning: 'fa-exclamation-circle',
+                        info: 'fa-info-circle'
+                    };
+                    
+                    const date = new Date(alert.created_at);
+                    
+                    return `
+                        <div style="border-left: 4px solid ${severityColors[alert.severity]}; padding: 15px; margin-bottom: 10px; background: #f9fafb; border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas ${severityIcons[alert.severity]}" style="color: ${severityColors[alert.severity]};"></i>
+                                    <div>
+                                        <div style="font-weight: 600;">${alert.hostname} - ${alert.alert_type.replace('_', ' ').toUpperCase()}</div>
+                                        <div style="font-size: 12px; color: #6b7280;">${date.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                                <span class="badge ${alert.resolved ? 'badge-success' : 'badge-warning'}">
+                                    ${alert.resolved ? 'Resolved' : 'Active'}
+                                </span>
+                            </div>
+                            <div style="font-size: 13px; color: #374151; white-space: pre-line;">${alert.message}</div>
+                            ${!alert.resolved ? `
+                                <button class="btn btn-sm btn-primary" onclick="resolveAlert(${alert.id})" style="margin-top: 10px;">
+                                    <i class="fas fa-check"></i> Mark as Resolved
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error loading alert history:', error);
+        document.getElementById('alertHistoryList').innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #f56565;">
+                <i class="fas fa-exclamation-triangle"></i> Failed to load alert history
+            </div>
+        `;
+    }
+}
+
+// Resolve alert
+async function resolveAlert(alertId) {
+    try {
+        const response = await fetch(`/api/alerts/${alertId}/resolve`, {
+            method: 'POST'
+        });
+        
+        if (!response.ok) throw new Error('Failed to resolve alert');
+        
+        showToast('Alert marked as resolved', 'success');
+        loadAlertHistory();
+        loadAlertStats();
+    } catch (error) {
+        console.error('Error resolving alert:', error);
+        showToast('Failed to resolve alert', 'error');
+    }
+}
+
+// Initialize alerts view
+function initializeAlertsView() {
+    loadAlertConfig();
+    loadNotificationChannels();
+    loadAlertStats();
+    loadAlertHistory();
+    
+    // Setup form handlers
+    const alertConfigForm = document.getElementById('alertConfigForm');
+    if (alertConfigForm) {
+        alertConfigForm.removeEventListener('submit', saveAlertConfig);
+        alertConfigForm.addEventListener('submit', saveAlertConfig);
+    }
+    
+    const channelForm = document.getElementById('channelForm');
+    if (channelForm) {
+        channelForm.removeEventListener('submit', saveChannel);
+        channelForm.addEventListener('submit', saveChannel);
+    }
+}
+
+// ==================== END ALERT MANAGEMENT ====================
+
 // Helper: Escape HTML
 function escapeHtml(text) {
     const div = document.createElement('div');
@@ -1621,6 +2124,17 @@ window.showAddUserForm = showAddUserForm;
 window.hideAddUserForm = hideAddUserForm;
 window.deleteUser = deleteUser;
 
+// Alert Management Functions
+window.showAddChannelModal = showAddChannelModal;
+window.closeChannelModal = closeChannelModal;
+window.updateChannelForm = updateChannelForm;
+window.updateWhatsAppForm = updateWhatsAppForm;
+window.testChannel = testChannel;
+window.testChannelById = testChannelById;
+window.deleteChannel = deleteChannel;
+window.resolveAlert = resolveAlert;
+window.loadAlertHistory = loadAlertHistory;
+
 console.log('[DEBUG] All window functions registered:', {
     openModal: typeof window.openModal,
     closeModal: typeof window.closeModal,
@@ -1631,5 +2145,6 @@ console.log('[DEBUG] All window functions registered:', {
     editGroup: typeof window.editGroup,
     editHost: typeof window.editHost,
     deleteHost: typeof window.deleteHost,
-    logout: typeof window.logout
+    logout: typeof window.logout,
+    alertFunctions: typeof window.showAddChannelModal
 });
