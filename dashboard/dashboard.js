@@ -68,6 +68,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateStats();
         console.log('[DEBUG] Stats updated');
         
+        // Hide all views initially before restoring
+        hideAllViews();
+        console.log('[DEBUG] All views hidden');
+        
         // Restore last view or show dashboard
         restoreLastView();
         console.log('[DEBUG] View restored');
@@ -77,6 +81,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('[ERROR] Dashboard initialization failed:', error);
     }
 });
+
+// Hide all views
+function hideAllViews() {
+    const allViews = document.querySelectorAll('.content-view');
+    allViews.forEach(view => {
+        view.style.display = 'none';
+    });
+}
 
 // Save current view to localStorage
 function saveCurrentView(viewName) {
@@ -102,24 +114,24 @@ function restoreLastView() {
             }
         });
         
-        // Show the view
+        // Show the view without saving (to prevent override)
         if (lastView === 'dashboard') {
-            showDashboardView();
+            showDashboardView(true);
         } else if (lastView === 'hosts') {
-            showAllHostsView();
+            showAllHostsView(true);
         } else if (lastView === 'groups') {
-            showGroupsView();
+            showGroupsView(true);
         } else if (lastView === 'alerts') {
-            showAlertsView();
+            showAlertsView(true);
         } else if (lastView === 'settings') {
-            showSettingsView();
+            showSettingsView(true);
         } else {
             // Default to dashboard if unknown view
-            showDashboardView();
+            showDashboardView(true);
         }
     } catch (e) {
         console.error('[ERROR] Failed to restore view:', e);
-        showDashboardView();
+        showDashboardView(true);
     }
 }
 
@@ -635,11 +647,13 @@ function toggleSidebar() {
 }
 
 // View Functions
-function showDashboardView() {
+function showDashboardView(skipSave = false) {
     console.log('[DEBUG] Showing dashboard view');
     
-    // Save current view
-    saveCurrentView('dashboard');
+    // Save current view (unless restoring)
+    if (!skipSave) {
+        saveCurrentView('dashboard');
+    }
     
     // Show dashboard view
     const dashboardView = document.getElementById('dashboardView');
@@ -657,14 +671,18 @@ function showDashboardView() {
     
     currentView = 'dashboard';
     document.getElementById('pageTitle').textContent = 'Dashboard Overview';
+    
+    // Render groups for dashboard view
     renderGroups();
 }
 
-function showAllHostsView() {
+function showAllHostsView(skipSave = false) {
     console.log('[DEBUG] Showing all hosts view');
     
-    // Save current view
-    saveCurrentView('hosts');
+    // Save current view (unless restoring)
+    if (!skipSave) {
+        saveCurrentView('hosts');
+    }
     
     // Hide all other content views first
     const allViews = document.querySelectorAll('.content-view');
@@ -729,11 +747,13 @@ function showAllHostsView() {
     container.innerHTML = allHostsCard;
 }
 
-function showGroupsView() {
+function showGroupsView(skipSave = false) {
     console.log('[DEBUG] Showing groups view');
     
-    // Save current view
-    saveCurrentView('groups');
+    // Save current view (unless restoring)
+    if (!skipSave) {
+        saveCurrentView('groups');
+    }
     
     // Hide all other content views first
     const allViews = document.querySelectorAll('.content-view');
@@ -920,11 +940,13 @@ function attachGroupToggleListeners() {
     console.log('[DEBUG] Finished attaching all listeners');
 }
 
-function showSettingsView() {
+function showSettingsView(skipSave = false) {
     console.log('[DEBUG] Showing settings view');
     
-    // Save current view
-    saveCurrentView('settings');
+    // Save current view (unless restoring)
+    if (!skipSave) {
+        saveCurrentView('settings');
+    }
     
     // Hide all other content views first
     const allViews = document.querySelectorAll('.content-view');
@@ -1642,12 +1664,14 @@ function showUserManagement() {
 }
 
 // Show Alerts View
-function showAlertsView() {
+function showAlertsView(skipSave = false) {
     console.log('[DEBUG] ========== Showing Alerts View ==========');
     console.log('[DEBUG] Function called at:', new Date().toISOString());
     
-    // Save current view
-    saveCurrentView('alerts');
+    // Save current view (unless restoring)
+    if (!skipSave) {
+        saveCurrentView('alerts');
+    }
     
     // Hide dashboard view
     const dashboardView = document.getElementById('dashboardView');
