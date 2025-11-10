@@ -1645,9 +1645,54 @@ function showAgentTutorialView(skipSave = false) {
     if (tutorialView) {
         tutorialView.style.display = 'block';
         console.log('[DEBUG] Agent Tutorial View shown');
+        
+        // Load API key
+        loadTutorialApiKey();
     } else {
         console.error('[ERROR] agentTutorialView element NOT FOUND!');
     }
+}
+
+// Load API key for tutorial
+async function loadTutorialApiKey() {
+    try {
+        const response = await fetch(`${API_BASE}/api/current-user`, {
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const user = await response.json();
+            const apiKeyElement = document.getElementById('tutorialApiKey');
+            if (apiKeyElement && user.api_key) {
+                apiKeyElement.textContent = user.api_key;
+            }
+        }
+    } catch (error) {
+        console.error('[ERROR] Failed to load API key:', error);
+        const apiKeyElement = document.getElementById('tutorialApiKey');
+        if (apiKeyElement) {
+            apiKeyElement.textContent = 'Error loading API key';
+        }
+    }
+}
+
+// Copy API key from tutorial
+function copyTutorialApiKey() {
+    const apiKeyElement = document.getElementById('tutorialApiKey');
+    if (!apiKeyElement) return;
+    
+    const apiKey = apiKeyElement.textContent;
+    if (apiKey === 'Loading...' || apiKey === 'Error loading API key') {
+        showToast('API key not available', 'error');
+        return;
+    }
+    
+    navigator.clipboard.writeText(apiKey).then(() => {
+        showToast('API key copied to clipboard!', 'success');
+    }).catch(err => {
+        console.error('Failed to copy API key:', err);
+        showToast('Failed to copy API key', 'error');
+    });
 }
 
 // Show specific tutorial tab
@@ -2399,6 +2444,7 @@ window.resolveAlert = resolveAlert;
 window.loadAlertHistory = loadAlertHistory;
 window.showTutorialTab = showTutorialTab;
 window.copyCode = copyCode;
+window.copyTutorialApiKey = copyTutorialApiKey;
 
 console.log('[DEBUG] All window functions registered:', {
     openModal: typeof window.openModal,

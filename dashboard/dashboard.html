@@ -2517,8 +2517,26 @@
                 <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
                     Install the monitoring agent on your servers to enable real-time monitoring of CPU, memory, disk, network, and processes.
                 </p>
-                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                     <strong>Server URL:</strong> <code style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 4px; margin-left: 10px;">https://eyes.indoinfinite.com</code>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                    <strong>Your API Key:</strong> <code id="tutorialApiKey" style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 4px; margin-left: 10px;">Loading...</code>
+                    <button onclick="copyTutorialApiKey()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 12px; border-radius: 4px; margin-left: 10px; cursor: pointer; transition: all 0.3s;">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+            </div>
+
+            <!-- API Key Info Card -->
+            <div class="alert-info" style="margin-bottom: 30px; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; padding: 20px;">
+                <i class="fas fa-info-circle" style="font-size: 24px; color: #0c5460;"></i>
+                <div style="flex: 1;">
+                    <strong style="color: #0c5460; display: block; margin-bottom: 8px;">Important: API Key Required</strong>
+                    <p style="color: #0c5460; margin: 0; line-height: 1.6;">
+                        The monitoring agent requires an API key for authentication. Your API key is shown above. 
+                        Copy it and use it in the agent configuration below. Keep it secure and don't share it publicly.
+                    </p>
                 </div>
             </div>
 
@@ -2568,11 +2586,13 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/wandiabdullah/monitori
 
                 <div class="tutorial-step">
                     <h3><span class="step-number">4</span> Configure Agent</h3>
-                    <p>Edit <code>agent.py</code> and update the server URL:</p>
+                    <p>Edit <code>agent.py</code> and update the server URL and API key:</p>
                     <div class="code-block">
                         <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
-                        <pre><code>SERVER_URL = "https://eyes.indoinfinite.com/api/metrics"</code></pre>
+                        <pre><code>SERVER_URL = "https://eyes.indoinfinite.com/api/metrics"
+API_KEY = "your-api-key-here"  # Replace with your API key from dashboard</code></pre>
                     </div>
+                    <p style="margin-top: 10px;"><strong>Note:</strong> Replace <code>your-api-key-here</code> with your actual API key shown at the top of this page.</p>
                 </div>
 
                 <div class="tutorial-step">
@@ -2641,9 +2661,11 @@ pip3 install requests psutil</code></pre>
                     <div class="code-block">
                         <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
                         <pre><code>nano agent.py
-# Update SERVER_URL:
-SERVER_URL = "https://eyes.indoinfinite.com/api/metrics"</code></pre>
+# Update SERVER_URL and API_KEY:
+SERVER_URL = "https://eyes.indoinfinite.com/api/metrics"
+API_KEY = "your-api-key-here"  # Replace with your API key</code></pre>
                     </div>
+                    <p style="margin-top: 10px;"><strong>Note:</strong> Copy your API key from the top of this page.</p>
                 </div>
 
                 <div class="tutorial-step">
@@ -2733,12 +2755,14 @@ CMD ["python", "agent.py"]</code></pre>
                 </div>
 
                 <div class="tutorial-step">
-                    <h3><span class="step-number">3</span> Update Server URL</h3>
-                    <p>Edit <code>agent.py</code> and set:</p>
+                    <h3><span class="step-number">3</span> Configure Agent</h3>
+                    <p>Edit <code>agent.py</code> and set server URL and API key:</p>
                     <div class="code-block">
                         <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
-                        <pre><code>SERVER_URL = "https://eyes.indoinfinite.com/api/metrics"</code></pre>
+                        <pre><code>SERVER_URL = "https://eyes.indoinfinite.com/api/metrics"
+API_KEY = "your-api-key-here"  # Replace with your API key from dashboard</code></pre>
                     </div>
+                    <p style="margin-top: 10px;"><strong>Note:</strong> Copy your API key from the top of this page.</p>
                 </div>
 
                 <div class="tutorial-step">
@@ -2808,13 +2832,15 @@ curl -O https://raw.githubusercontent.com/wandiabdullah/monitoring/main/agent/ag
                 </div>
 
                 <div class="tutorial-step">
-                    <h3><span class="step-number">4</span> Configure Server URL</h3>
-                    <p>Edit the <code>SERVER_URL</code> variable in agent.py:</p>
+                    <h3><span class="step-number">4</span> Configure Server URL and API Key</h3>
+                    <p>Edit the <code>SERVER_URL</code> and <code>API_KEY</code> variables in agent.py:</p>
                     <div class="code-block">
                         <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
                         <pre><code>SERVER_URL = "https://eyes.indoinfinite.com/api/metrics"
+API_KEY = "your-api-key-here"  # Replace with your API key from dashboard
 INTERVAL = 30  # Send metrics every 30 seconds</code></pre>
                     </div>
+                    <p style="margin-top: 10px;"><strong>Note:</strong> Copy your API key from the top of this page.</p>
                 </div>
 
                 <div class="tutorial-step">
