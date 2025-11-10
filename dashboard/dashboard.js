@@ -1696,7 +1696,9 @@ function hideAddUserForm() {
 // Load alert configuration
 async function loadAlertConfig() {
     try {
-        const response = await fetch('/api/alerts/config');
+        const response = await fetch('/api/alerts/config', {
+            credentials: 'include'
+        });
         if (!response.ok) throw new Error('Failed to load alert config');
         
         const config = await response.json();
@@ -1735,6 +1737,7 @@ async function saveAlertConfig(event) {
         const response = await fetch('/api/alerts/config', {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
             body: JSON.stringify(config)
         });
         
@@ -1751,7 +1754,9 @@ async function saveAlertConfig(event) {
 // Load notification channels
 async function loadNotificationChannels() {
     try {
-        const response = await fetch('/api/alerts/channels');
+        const response = await fetch('/api/alerts/channels', {
+            credentials: 'include'
+        });
         if (!response.ok) throw new Error('Failed to load channels');
         
         const channels = await response.json();
@@ -1921,6 +1926,7 @@ async function saveChannel(event) {
         const response = await fetch('/api/alerts/channels', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
             body: JSON.stringify(data)
         });
         
@@ -1985,6 +1991,7 @@ async function testChannel() {
         const response = await fetch('/api/alerts/test', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
             body: JSON.stringify({channel_type: type, config: config})
         });
         
@@ -2007,7 +2014,8 @@ async function testChannelById(channelId) {
         showToast('Sending test notification...', 'info');
         
         const response = await fetch(`/api/alerts/channels/${channelId}/test`, {
-            method: 'POST'
+            method: 'POST',
+            credentials: 'include'
         });
         
         const result = await response.json();
@@ -2031,7 +2039,8 @@ async function deleteChannel(channelId) {
     
     try {
         const response = await fetch(`/api/alerts/channels/${channelId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            credentials: 'include'
         });
         
         if (!response.ok) throw new Error('Failed to delete channel');
@@ -2047,7 +2056,9 @@ async function deleteChannel(channelId) {
 // Load alert statistics
 async function loadAlertStats() {
     try {
-        const response = await fetch('/api/alerts/stats');
+        const response = await fetch('/api/alerts/stats', {
+            credentials: 'include'
+        });
         if (!response.ok) throw new Error('Failed to load stats');
         
         const stats = await response.json();
@@ -2056,7 +2067,9 @@ async function loadAlertStats() {
         document.getElementById('alertUnresolved').textContent = stats.unresolved || 0;
         
         // Update system status
-        const configResponse = await fetch('/api/alerts/config');
+        const configResponse = await fetch('/api/alerts/config', {
+            credentials: 'include'
+        });
         const config = await configResponse.json();
         document.getElementById('alertSystemStatus').textContent = config.enabled ? 'Active' : 'Disabled';
         
@@ -2068,7 +2081,9 @@ async function loadAlertStats() {
 // Load alert history
 async function loadAlertHistory() {
     try {
-        const response = await fetch('/api/alerts/history?limit=20');
+        const response = await fetch('/api/alerts/history?limit=20', {
+            credentials: 'include'
+        });
         if (!response.ok) throw new Error('Failed to load history');
         
         const alerts = await response.json();
@@ -2140,7 +2155,8 @@ async function loadAlertHistory() {
 async function resolveAlert(alertId) {
     try {
         const response = await fetch(`/api/alerts/${alertId}/resolve`, {
-            method: 'POST'
+            method: 'POST',
+            credentials: 'include'
         });
         
         if (!response.ok) throw new Error('Failed to resolve alert');
