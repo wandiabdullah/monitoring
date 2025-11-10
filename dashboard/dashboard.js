@@ -8,6 +8,41 @@ let expandedGroups = new Set(); // Track which groups are expanded
 let currentView = 'dashboard'; // Track current view: 'dashboard', 'allhosts', 'groups'
 let sidebarCollapsed = false; // Track sidebar state
 
+// Toast Notification Function
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+        console.error('Toast container not found');
+        return;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    // Icon based on type
+    let icon = '📢';
+    if (type === 'success') icon = '✅';
+    else if (type === 'error') icon = '❌';
+    else if (type === 'warning') icon = '⚠️';
+    else if (type === 'info') icon = 'ℹ️';
+    
+    toast.innerHTML = `
+        <div class="toast-icon">${icon}</div>
+        <div class="toast-message">${message}</div>
+        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        toast.classList.add('removing');
+        setTimeout(() => {
+            toast.remove();
+        }, 300); // Match animation duration
+    }, 5000);
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('[DEBUG] Dashboard initializing...');
@@ -2168,6 +2203,7 @@ function escapeHtml(text) {
 }
 
 // Make all necessary functions globally available for HTML onclick handlers
+window.showToast = showToast;
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.copyApiKey = copyApiKey;
