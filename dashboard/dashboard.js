@@ -155,7 +155,7 @@ function renderGroups() {
         groupCard.className = 'group-card';
         groupCard.innerHTML = `
             <div class="group-header">
-                <div class="group-info" onclick="toggleGroup(${group.id})">
+                <div class="group-info group-toggle-trigger" data-group-id="${group.id}">
                     <div class="group-icon">
                         <i class="fas ${group.icon}"></i>
                     </div>
@@ -164,7 +164,7 @@ function renderGroups() {
                         <p>${group.description}</p>
                     </div>
                 </div>
-                <div class="group-stats" onclick="toggleGroup(${group.id})">
+                <div class="group-stats group-toggle-trigger" data-group-id="${group.id}">
                     <div class="group-stat">
                         <div class="number">${groupHosts.length}</div>
                         <div class="label">Hosts</div>
@@ -198,7 +198,7 @@ function renderGroups() {
         const ungroupedCard = document.createElement('div');
         ungroupedCard.className = 'group-card';
         ungroupedCard.innerHTML = `
-            <div class="group-header" onclick="toggleGroup(0)">
+            <div class="group-header group-toggle-trigger" data-group-id="0">
                 <div class="group-info">
                     <div class="group-icon">
                         <i class="fas fa-server"></i>
@@ -226,6 +226,9 @@ function renderGroups() {
     
     // Use setTimeout to ensure DOM is fully rendered before manipulating classes
     setTimeout(() => {
+        // Attach click listeners first
+        attachGroupToggleListeners();
+        
         // Restore expanded state after render
         restoreExpandedState();
         
@@ -633,7 +636,7 @@ function showGroupsView() {
         groupCard.className = 'group-card';
         groupCard.innerHTML = `
             <div class="group-header">
-                <div class="group-info" onclick="toggleGroup(${group.id})">
+                <div class="group-info group-toggle-trigger" data-group-id="${group.id}">
                     <div class="group-icon" style="background: ${group.color}20; color: ${group.color}">
                         <i class="fas ${group.icon}"></i>
                     </div>
@@ -642,7 +645,7 @@ function showGroupsView() {
                         <p>${group.description || 'No description'}</p>
                     </div>
                 </div>
-                <div class="group-stats" onclick="toggleGroup(${group.id})">
+                <div class="group-stats group-toggle-trigger" data-group-id="${group.id}">
                     <div class="group-stat">
                         <div class="number">${groupHosts.length}</div>
                         <div class="label">Hosts</div>
@@ -676,7 +679,7 @@ function showGroupsView() {
         const ungroupedCard = document.createElement('div');
         ungroupedCard.className = 'group-card';
         ungroupedCard.innerHTML = `
-            <div class="group-header" onclick="toggleGroup(0)">
+            <div class="group-header group-toggle-trigger" data-group-id="0">
                 <div class="group-info">
                     <div class="group-icon">
                         <i class="fas fa-server"></i>
@@ -702,8 +705,11 @@ function showGroupsView() {
         container.appendChild(ungroupedCard);
     }
     
-    // Use setTimeout to ensure DOM is fully rendered before manipulating classes
+    // Use setTimeout to ensure DOM is fully rendered
     setTimeout(() => {
+        // Attach click listeners to all toggle triggers
+        attachGroupToggleListeners();
+        
         // Restore expanded state after render
         restoreExpandedState();
         
@@ -715,6 +721,34 @@ function showGroupsView() {
             console.log('[DEBUG] Restored expanded groups in Groups view:', Array.from(expandedGroups));
         }
     }, 0);
+}
+
+// Attach click listeners for group toggle
+function attachGroupToggleListeners() {
+    console.log('[DEBUG] Attaching group toggle listeners...');
+    
+    const triggers = document.querySelectorAll('.group-toggle-trigger');
+    console.log('[DEBUG] Found toggle triggers:', triggers.length);
+    
+    triggers.forEach(trigger => {
+        const groupId = trigger.getAttribute('data-group-id');
+        
+        trigger.addEventListener('click', (e) => {
+            // Don't trigger if clicking on action buttons
+            if (e.target.closest('.group-actions')) {
+                return;
+            }
+            
+            console.log('[DEBUG] Trigger clicked for group:', groupId);
+            const numericGroupId = groupId === '0' ? 0 : parseInt(groupId);
+            toggleGroup(numericGroupId);
+        });
+        
+        // Make it look clickable
+        trigger.style.cursor = 'pointer';
+        
+        console.log('[DEBUG] Attached listener to group:', groupId);
+    });
 }
 
 function showSettingsView() {
