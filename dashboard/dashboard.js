@@ -482,14 +482,93 @@ function refreshCurrentView() {
             renderGroups();
             break;
         case 'allhosts':
-            showAllHostsView();
+            // Render All Hosts view without saving
+            renderAllHostsView();
             break;
         case 'groups':
-            showGroupsView();
+            // Render Groups view without saving
+            renderGroupsView();
+            break;
+        case 'alerts':
+            // Don't refresh alerts view (has its own data loading)
+            console.log('[DEBUG] Skipping refresh for alerts view');
             break;
         default:
-            renderGroups();
+            // Don't do anything if view is unknown
+            console.log('[DEBUG] Unknown view, skipping refresh');
     }
+}
+
+// Render All Hosts view (without changing view state)
+function renderAllHostsView() {
+    const container = document.getElementById('groupsList');
+    
+    if (hosts.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-server"></i>
+                <h3>No Hosts Yet</h3>
+                <p>Add your first host to start monitoring</p>
+                <button class="btn btn-primary" onclick="openModal('addHostModal')">
+                    <i class="fas fa-plus"></i> Add Host
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    // Show all hosts in a single card - always expanded
+    const allHostsCard = `
+        <div class="group-card">
+            <div class="group-header">
+                <div class="group-info">
+                    <div class="group-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="group-details">
+                        <h3>All Hosts</h3>
+                        <p>Complete list of monitored servers</p>
+                    </div>
+                </div>
+                <div class="group-stats">
+                    <div class="group-stat">
+                        <div class="number">${hosts.length}</div>
+                        <div class="label">Total</div>
+                    </div>
+                    <div class="group-stat">
+                        <div class="number" style="color: var(--success-color)">${hosts.filter(h => h.status === 'online').length}</div>
+                        <div class="label">Online</div>
+                    </div>
+                </div>
+            </div>
+            <div class="group-hosts expanded" style="max-height: none !important;">
+                ${renderHosts(hosts)}
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = allHostsCard;
+}
+
+// Render Groups view (without changing view state)
+function renderGroupsView() {
+    const container = document.getElementById('groupsList');
+    
+    if (groups.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-folder-open"></i>
+                <h3>No Groups Yet</h3>
+                <p>Create your first group to organize your servers</p>
+                <button class="btn btn-primary" onclick="openModal('addGroupModal')">
+                    <i class="fas fa-plus"></i> Create Group
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    renderGroups();
 }
 
 // Initialize event listeners
@@ -698,7 +777,10 @@ function showAllHostsView(skipSave = false) {
     
     currentView = 'allhosts';
     document.getElementById('pageTitle').textContent = 'All Hosts';
-    const container = document.getElementById('groupsList');
+    
+    // Render content
+    renderAllHostsView();
+}
     
     if (hosts.length === 0) {
         container.innerHTML = `
