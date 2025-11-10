@@ -1051,27 +1051,28 @@
 
     <!-- Main Content -->
     <main class="main-content" id="mainContent">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-left">
-                <h1 id="pageTitle">Dashboard Overview</h1>
-            </div>
-            <div class="header-right">
-                <div class="header-actions">
-                    <button class="btn btn-primary" id="addHostBtn">
-                        <i class="fas fa-plus"></i>
-                        Add Host
-                    </button>
-                    <button class="btn btn-secondary" id="refreshBtn">
-                        <i class="fas fa-sync-alt"></i>
-                        Refresh
-                    </button>
-                </div>
-            </div>
-        </header>
-
+        
         <!-- Dashboard View (Default) -->
         <div id="dashboardView" class="content-view">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 id="pageTitle">Dashboard Overview</h1>
+                </div>
+                <div class="header-right">
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="addHostBtn">
+                            <i class="fas fa-plus"></i>
+                            Add Host
+                        </button>
+                        <button class="btn btn-secondary" id="refreshBtn">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+            </header>
+
             <!-- Content -->
             <div class="content">
                 <!-- Stats Cards -->
@@ -1128,7 +1129,8 @@
                 </div>
             </div>
         </div>
-    </main>
+        </div>
+        <!-- End Dashboard View -->
 
     <!-- Add Host Modal -->
     <div class="modal" id="addHostModal">
@@ -1451,8 +1453,6 @@
                 </div>
             </div>
         </div>
-        </div>
-        <!-- End Dashboard View -->
     </div>
 
     <!-- Alert Settings View -->
@@ -1747,8 +1747,11 @@
         </div>
     </div>
 
+    </main>
+    <!-- End Main Content -->
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <!-- Load frontend script from Flask static folder to avoid routing conflicts -->
-    <script src="/static/dashboard.js?v=20251110004"></script>
+    <script src="/static/dashboard.js?v=20251110005"></script>
 </body>
 </html>
