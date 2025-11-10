@@ -8,12 +8,26 @@ Sistem monitoring lengkap untuk server Linux dengan dashboard real-time monitori
 
 **Recommended untuk production!**
 
+#### Windows Server:
 ```powershell
-# 1. Edit email di setup-letsencrypt.ps1
+# 1. Edit email di setup-letsencrypt-simple.ps1
 $EMAIL = "your-email@domain.com"
 
 # 2. Run setup (otomatis dapat SSL + auto-renewal)
-.\setup-letsencrypt.ps1
+.\setup-letsencrypt-simple.ps1
+
+# 3. Akses via HTTPS
+https://eyes.indoinfinite.com
+```
+
+#### Linux Server:
+```bash
+# 1. Edit email di setup-letsencrypt-simple-linux.sh
+EMAIL="your-email@domain.com"
+
+# 2. Run setup
+chmod +x setup-letsencrypt-simple-linux.sh
+./setup-letsencrypt-simple-linux.sh
 
 # 3. Akses via HTTPS
 https://eyes.indoinfinite.com
@@ -23,7 +37,10 @@ https://eyes.indoinfinite.com
 ✅ Auto-renewal setiap 12 jam  
 ✅ No browser warning
 
-**Dokumentasi lengkap:** [LETSENCRYPT-GUIDE.md](LETSENCRYPT-GUIDE.md)
+**Dokumentasi:**
+- Windows: [LETSENCRYPT-GUIDE.md](LETSENCRYPT-GUIDE.md)
+- Linux: [LINUX-SSL-GUIDE.md](LINUX-SSL-GUIDE.md)
+- Quick Reference: [LINUX-QUICKSTART.txt](LINUX-QUICKSTART.txt)
 
 ---
 
@@ -67,7 +84,20 @@ Lihat [LETSENCRYPT-GUIDE.md](LETSENCRYPT-GUIDE.md) dan [QUICK-REFERENCE.md](QUIC
 
 ## 📋 Fitur
 
-### 🎨 Modern Dashboard (NEW!)
+### 🚨 Alert System (NEW!)
+- **Auto-detection**: Server down, high CPU, disk full, memory high
+- **Multi-channel Notifications**:
+  - ✉️ Email (Gmail, Office 365, custom SMTP)
+  - 📱 Telegram Bot (real-time)
+  - 💬 WhatsApp (Twilio atau Fonnte)
+- **Configurable Thresholds**: CPU > 70%, Disk > 90%, Memory > 90%
+- **Cooldown Protection**: Prevent notification spam
+- **Alert History**: Track all alerts dengan resolve status
+- **Test Notifications**: Verify channel configuration
+
+**Quick Setup:** [ALERT-SETUP-GUIDE.md](ALERT-SETUP-GUIDE.md) | **Summary:** [ALERT-SYSTEM-SUMMARY.md](ALERT-SYSTEM-SUMMARY.md)
+
+### 🎨 Modern Dashboard
 - **Sidebar Navigation**: Professional UI dengan menu samping
 - **Group Management**: Organize hosts berdasarkan kategori
   - Production, Development, Database, dll
@@ -207,10 +237,57 @@ python3 monitor_agent.py --server http://MONITORING_SERVER_IP:5000
 
 ### Akses Dashboard
 
-1. Buka browser ke `http://MONITORING_SERVER_IP:5000`
-2. Anda akan melihat list semua server yang termonitor
+**Development (HTTP):**
+```
+http://MONITORING_SERVER_IP:5000
+```
+
+**Production (HTTPS with SSL):**
+```
+https://eyes.indoinfinite.com
+```
+
+1. Login dengan credentials (default: admin/admin123)
+2. Lihat list semua server yang termonitor
 3. Klik pada server card untuk melihat detail
 4. Dashboard auto-refresh setiap 5 detik
+
+---
+
+### ⚠️ PENTING: Update Agent Setelah SSL Aktif
+
+Setelah mengaktifkan SSL/HTTPS, **SEMUA monitoring agent** di server yang termonitor **HARUS diupdate** untuk menggunakan HTTPS.
+
+#### Quick Fix:
+
+Di setiap server yang termonitor:
+
+```bash
+# 1. Stop agent yang running
+ps aux | grep monitor_agent.py
+kill <PID>
+
+# 2. Start dengan URL HTTPS (tanpa port!)
+python3 monitor_agent.py \
+  --server https://eyes.indoinfinite.com \
+  --api-key YOUR_API_KEY \
+  --interval 5
+```
+
+**Perubahan URL:**
+```bash
+# ❌ LAMA (tidak berfungsi setelah SSL):
+--server http://eyes.indoinfinite.com:5000
+
+# ✅ BARU (gunakan ini):
+--server https://eyes.indoinfinite.com
+```
+
+**📖 Dokumentasi Lengkap:**
+- [UPDATE-AGENTS-FOR-SSL.md](UPDATE-AGENTS-FOR-SSL.md) - Panduan lengkap
+- [AGENT-UPDATE-QUICKFIX.txt](AGENT-UPDATE-QUICKFIX.txt) - Quick reference
+
+---
 
 ### Dashboard Features
 
@@ -231,12 +308,34 @@ python3 monitor_agent.py --server http://MONITORING_SERVER_IP:5000
 Edit parameter saat menjalankan agent:
 
 ```bash
-# Custom interval collection (default: 5 detik)
-python3 monitor_agent.py --server http://SERVER:5000 --interval 10
+# ⚠️ SETELAH SSL AKTIF - gunakan HTTPS (tanpa port!)
+python3 monitor_agent.py \
+  --server https://eyes.indoinfinite.com \
+  --api-key YOUR_API_KEY \
+  --interval 5
 
-# Custom hostname
-python3 monitor_agent.py --server http://SERVER:5000 --hostname web-server-prod-01
+# SEBELUM SSL / Development - gunakan HTTP dengan port
+python3 monitor_agent.py \
+  --server http://SERVER:5000 \
+  --api-key YOUR_API_KEY \
+  --interval 10
+
+# Custom hostname (dengan --no-key-mapping)
+python3 monitor_agent.py \
+  --server https://eyes.indoinfinite.com \
+  --api-key YOUR_API_KEY \
+  --hostname web-server-prod-01 \
+  --no-key-mapping
 ```
+
+**Key Mapping (Default - Recommended):**
+- Hostname ditentukan server berdasarkan API key
+- Lebih aman, mencegah key sharing
+- Agent tidak perlu kirim hostname
+
+**No Key Mapping:**
+- Agent mengirim hostname sendiri
+- Untuk testing atau custom setup
 
 ## 🔧 Konfigurasi
 

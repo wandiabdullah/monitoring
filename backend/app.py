@@ -10,6 +10,9 @@ import secrets
 import sqlite3
 from functools import wraps
 
+# Import alert system
+import alert_system
+
 app = Flask(__name__, static_folder='../dashboard', static_url_path='/static', template_folder='../dashboard')
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
@@ -142,6 +145,9 @@ def init_db():
         )
         db.commit()
         print("Default admin user created: username=admin, password=admin123")
+    
+    # Initialize alert tables
+    alert_system.init_alert_tables()
     
     db.close()
 
@@ -971,10 +977,212 @@ def get_network_info(hostname):
     return jsonify(network_data)
 
 
+# ==================== ALERT ENDPOINTS ====================
+
+@app.route('/api/alerts/config', methods=['GET'])
+@login_required
+def get_alert_config_endpoint():
+    """Get alert configuration"""
+    try:
+        config = alert_system.get_alert_config()
+        return jsonify(config if config else {})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alerts/config', methods=['PUT'])
+@admin_required
+def update_alert_config_endpoint():
+    """Update alert configuration"""
+    try:
+        data = request.json
+        alert_system.update_alert_config(data)
+        return jsonify({'success': True, 'message': 'Alert configuration updated'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alerts/channels', methods=['GET'])
+@login_required
+def get_notification_channels_endpoint():
+    """Get all notification channels"""
+    try:
+        channels = alert_system.get_notification_channels()
+        # Mask sensitive data
+        for channel in channels:
+            config = json.loads(channel['config'])
+            # Mask passwords, tokens, etc
+            if 'password' in config:
+                config['password'] = '****'
+            if 'auth_token' in config:
+                config['auth_token'] = '****'
+            if 'bot_token' in config:
+                config['bot_token'] = '****'
+            if 'api_key' in config:
+                config['api_key'] = '****'
+            channel['config'] = json.dumps(config)
+        return jsonify(channels)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alerts/channels', methods=['POST'])
+@admin_required
+def save_notification_channel_endpoint():
+    """Save or update notification channel"""
+    try:
+        data = request.json
+        channel_type = data.get('channel_type')
+        config = data.get('config')
+        enabled = data.get('enabled', 1)
+        
+        if not channel_type or not config:
+            return jsonify({'error': 'Missing channel_type or config'}), 400
+        
+        alert_system.save_notification_channel(channel_type, config, enabled)
+        return jsonify({'success': True, 'message': 'Notification channel saved'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alerts/channels/<int:channel_id>', methods=['DELETE'])
+@admin_required
+def delete_notification_channel_endpoint(channel_id):
+    """Delete notification channel"""
+    try:
+        alert_system.delete_notification_channel(channel_id)
+        return jsonify({'success': True, 'message': 'Notification channel deleted'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alerts/test', methods=['POST'])
+@admin_required
+def test_notification_endpoint():
+    """Test notification channel"""
+    try:
+        data = request.json
+        channel_type = data.get('channel_type')
+        config = data.get('config')
+        
+        if not channel_type or not config:
+            return jsonify({'error': 'Missing channel_type or config'}), 400
+        
+        test_message = f"""
+Test Alert from Server Monitoring System
+
+This is a test notification to verify your {channel_type.upper()} configuration.
+
+If you received this message, your notification channel is working correctly!
+
+Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC
+        """.strip()
+        
+        success = False
+        if channel_type == 'email':
+            success = alert_system.send_email_notification(config, 'Test Alert', test_message)
+        elif channel_type == 'telegram':
+            success = alert_system.send_telegram_notification(config, test_message)
+        elif channel_type == 'whatsapp':
+            success = alert_system.send_whatsapp_notification(config, test_message)
+        else:
+            return jsonify({'error': f'Unknown channel type: {channel_type}'}), 400
+        
+        if success:
+            return jsonify({'success': True, 'message': f'Test notification sent via {channel_type}'})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to send test notification'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alerts/history', methods=['GET'])
+@login_required
+def get_alert_history_endpoint():
+    """Get alert history"""
+    try:
+        limit = request.args.get('limit', default=100, type=int)
+        hostname = request.args.get('hostname')
+        
+        alerts = alert_system.get_alert_history(limit=limit, hostname=hostname)
+        return jsonify(alerts)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alerts/unresolved', methods=['GET'])
+@login_required
+def get_unresolved_alerts_endpoint():
+    """Get unresolved alerts"""
+    try:
+        hostname = request.args.get('hostname')
+        alerts = alert_system.get_unresolved_alerts(hostname=hostname)
+        return jsonify(alerts)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alerts/<int:alert_id>/resolve', methods=['POST'])
+@login_required
+def resolve_alert_endpoint(alert_id):
+    """Resolve an alert"""
+    try:
+        alert_system.resolve_alert(alert_id)
+        return jsonify({'success': True, 'message': 'Alert resolved'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alerts/stats', methods=['GET'])
+@login_required
+def get_alert_stats_endpoint():
+    """Get alert statistics"""
+    try:
+        db = get_db()
+        
+        # Total alerts today
+        today = datetime.utcnow().date()
+        total_today = db.execute('''
+            SELECT COUNT(*) as count 
+            FROM alert_history 
+            WHERE DATE(created_at) = ?
+        ''', (today,)).fetchone()['count']
+        
+        # Unresolved alerts
+        unresolved = db.execute('''
+            SELECT COUNT(*) as count 
+            FROM alert_history 
+            WHERE resolved = 0
+        ''').fetchone()['count']
+        
+        # Alerts by type (last 7 days)
+        by_type = db.execute('''
+            SELECT alert_type, COUNT(*) as count 
+            FROM alert_history 
+            WHERE created_at >= datetime('now', '-7 days')
+            GROUP BY alert_type
+        ''').fetchall()
+        
+        # Alerts by severity (last 7 days)
+        by_severity = db.execute('''
+            SELECT severity, COUNT(*) as count 
+            FROM alert_history 
+            WHERE created_at >= datetime('now', '-7 days')
+            GROUP BY severity
+        ''').fetchall()
+        
+        db.close()
+        
+        return jsonify({
+            'total_today': total_today,
+            'unresolved': unresolved,
+            'by_type': [dict(row) for row in by_type],
+            'by_severity': [dict(row) for row in by_severity]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     print("Starting Monitoring Server...")
     print("Initializing database...")
     init_db()
+    
+    # Start alert monitoring
+    print("Starting alert monitor...")
+    alert_system.start_alert_monitor(current_metrics, interval=30)
+    
     print("Dashboard available at: http://localhost:5000")
     print("API endpoint: http://localhost:5000/api/metrics")
     print("\nDefault admin credentials:")

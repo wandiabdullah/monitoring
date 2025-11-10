@@ -1,0 +1,170 @@
+═══════════════════════════════════════════════════════════════
+  🔄 QUICK FIX - UPDATE AGENT UNTUK HTTPS
+═══════════════════════════════════════════════════════════════
+
+MASALAH:
+  ❌ eyes.indoinfinite.com:5000 tidak menerima data
+  
+PENYEBAB:
+  Port 5000 tidak accessible dari luar setelah SSL aktif
+  Nginx sekarang handle semua request di port 443 (HTTPS)
+
+SOLUSI:
+  Update semua agent di server yang termonitor
+
+═══════════════════════════════════════════════════════════════
+
+🚀 CARA CEPAT UPDATE AGENT
+═══════════════════════════════════════════════════════════════
+
+Di setiap server yang TERMONITOR (bukan server monitoring):
+
+1. STOP AGENT YANG RUNNING:
+   
+   ps aux | grep monitor_agent.py
+   kill <PID>
+
+2. START DENGAN URL BARU:
+   
+   python3 monitor_agent.py \
+     --server https://eyes.indoinfinite.com \
+     --api-key YOUR_API_KEY \
+     --interval 5
+
+   PERHATIKAN:
+   - Gunakan HTTPS (bukan HTTP)
+   - TANPA port :5000
+   - API key sama seperti sebelumnya
+
+3. VERIFIKASI OUTPUT:
+   
+   Harus muncul:
+   [OK] Metrics sent successfully ✅
+
+═══════════════════════════════════════════════════════════════
+
+📝 PERBANDINGAN
+═══════════════════════════════════════════════════════════════
+
+LAMA (tidak berfungsi):
+  python3 monitor_agent.py \
+    --server http://eyes.indoinfinite.com:5000 \
+    --api-key abc123
+
+BARU (gunakan ini):
+  python3 monitor_agent.py \
+    --server https://eyes.indoinfinite.com \
+    --api-key abc123
+
+═══════════════════════════════════════════════════════════════
+
+🔍 CEK STATUS
+═══════════════════════════════════════════════════════════════
+
+DI SERVER YANG TERMONITOR:
+  # Cek agent running
+  ps aux | grep monitor_agent.py
+  
+  # Lihat output (harus ada [OK])
+  # Jika di background, cek log file
+
+DI DASHBOARD (https://eyes.indoinfinite.com):
+  1. Login
+  2. Server list harus show status "Online" 🟢
+  3. Klik server → metrics harus update setiap 5 detik
+
+═══════════════════════════════════════════════════════════════
+
+🐛 TROUBLESHOOTING CEPAT
+═══════════════════════════════════════════════════════════════
+
+ERROR: Connection Refused
+  → Update ke HTTPS tanpa port:
+    --server https://eyes.indoinfinite.com
+
+ERROR: SSL Certificate Verify Failed
+  → Update CA certificates:
+    sudo apt install ca-certificates
+    sudo update-ca-certificates
+
+Dashboard shows "Offline"
+  → Cek agent running:
+    ps aux | grep monitor_agent.py
+  → Restart agent dengan URL HTTPS
+
+═══════════════════════════════════════════════════════════════
+
+📋 CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+Untuk setiap server yang termonitor:
+
+ [ ] Stop agent lama (kill process)
+ [ ] Start agent dengan https://eyes.indoinfinite.com (no port)
+ [ ] Verifikasi output: [OK] Metrics sent successfully
+ [ ] Cek dashboard: status Online
+ [ ] Grafik update setiap 5 detik
+
+═══════════════════════════════════════════════════════════════
+
+💡 JIKA MENGGUNAKAN SYSTEMD SERVICE
+═══════════════════════════════════════════════════════════════
+
+Edit service file:
+  sudo nano /etc/systemd/system/monitoring-agent.service
+
+Update ExecStart line:
+  ExecStart=/usr/bin/python3 /path/to/monitor_agent.py \
+    --server https://eyes.indoinfinite.com \
+    --api-key YOUR_API_KEY \
+    --interval 5
+
+Reload dan restart:
+  sudo systemctl daemon-reload
+  sudo systemctl restart monitoring-agent
+  sudo systemctl status monitoring-agent
+
+═══════════════════════════════════════════════════════════════
+
+💡 AUTO-UPDATE SCRIPT
+═══════════════════════════════════════════════════════════════
+
+Buat file: update-agent.sh
+
+  #!/bin/bash
+  pkill -f monitor_agent.py
+  nohup python3 /path/to/monitor_agent.py \
+    --server https://eyes.indoinfinite.com \
+    --api-key YOUR_API_KEY \
+    --interval 5 \
+    > /var/log/monitoring.log 2>&1 &
+  echo "Agent updated!"
+  tail -f /var/log/monitoring.log
+
+Jalankan:
+  chmod +x update-agent.sh
+  ./update-agent.sh
+
+═══════════════════════════════════════════════════════════════
+
+✅ EXPECTED RESULT
+═══════════════════════════════════════════════════════════════
+
+Agent output:
+  [2025-11-10 10:30:00] Collected metrics:
+    CPU: 25.3%
+    Memory: 45.2%
+    Network: UP 150.5 KB/s | DOWN 350.2 KB/s
+    [OK] Metrics sent successfully  ✅
+
+Dashboard:
+  • Server status: 🟢 Online
+  • Metrics updating setiap 5 detik
+  • Grafik berfungsi normal
+  • HTTPS dengan 🔒 icon (no warning)
+
+═══════════════════════════════════════════════════════════════
+
+📚 DOCUMENTATION: UPDATE-AGENTS-FOR-SSL.md
+
+═══════════════════════════════════════════════════════════════
