@@ -2191,61 +2191,66 @@
     </div>
 
     <!-- Alert Settings View -->
-    <div id="alertsView" class="content-view" style="display: none;">
-        <div class="view-header">
-            <h1><i class="fas fa-bell"></i> Alert Settings</h1>
-            <p>Configure alert rules and notification channels</p>
-        </div>
+    <div id="alertsView" style="display: none;">
+        <!-- Header -->
+        <header class="page-header">
+            <div class="page-title">
+                <h1><i class="fas fa-bell"></i> Alert Settings</h1>
+                <p>Configure alert rules and notification channels</p>
+            </div>
+        </header>
 
-        <!-- Alert Statistics Cards -->
-        <div class="alert-stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon danger">
-                    <i class="fas fa-exclamation-triangle"></i>
+        <!-- Content -->
+        <div class="content">
+            <!-- Alert Statistics Cards -->
+            <div class="alert-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3 id="alertTotalToday">0</h3>
+                        <p>Total Alerts Today</p>
+                    </div>
                 </div>
-                <div class="stat-details">
-                    <h3 id="alertTotalToday">0</h3>
-                    <p>Total Alerts Today</p>
+
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="fas fa-bell-slash"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3 id="alertUnresolved">0</h3>
+                        <p>Unresolved Alerts</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon primary">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3 id="alertActiveChannels">0</h3>
+                        <p>Active Channels</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3 id="alertSystemStatus">Active</h3>
+                        <p>System Status</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-icon warning">
-                    <i class="fas fa-bell-slash"></i>
+            <!-- Alert Configuration -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-sliders-h"></i> Alert Rules Configuration</h2>
                 </div>
-                <div class="stat-details">
-                    <h3 id="alertUnresolved">0</h3>
-                    <p>Unresolved Alerts</p>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon primary">
-                    <i class="fas fa-paper-plane"></i>
-                </div>
-                <div class="stat-details">
-                    <h3 id="alertActiveChannels">0</h3>
-                    <p>Active Channels</p>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon success">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="stat-details">
-                    <h3 id="alertSystemStatus">Active</h3>
-                    <p>System Status</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Alert Configuration -->
-        <div class="card">
-            <div class="card-header">
-                <h2><i class="fas fa-sliders-h"></i> Alert Rules Configuration</h2>
-            </div>
-            <div class="card-body">
+                <div class="card-body">
                 <form id="alertConfigForm">
                     <div class="form-row">
                         <div class="form-group">
@@ -2355,7 +2360,8 @@
                 </div>
             </div>
         </div>
-    </div>
+        </div><!-- End Content -->
+    </div><!-- End Alert Settings View -->
 
     <!-- Add/Edit Notification Channel Modal -->
     <div id="channelModal" class="modal">
@@ -2962,6 +2968,6 @@ INTERVAL = 30  # Send metrics every 30 seconds</code></pre>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <!-- Load frontend script from Flask static folder to avoid routing conflicts -->
-    <script src="/static/dashboard.js?v=20251110018"></script>
+    <script src="/static/dashboard.js?v=20251110019"></script>
 </body>
 </html>
