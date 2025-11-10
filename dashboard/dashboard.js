@@ -635,7 +635,7 @@ function showGroupsView() {
     
     groups.forEach((group, index) => {
         console.log('[DEBUG] Rendering group', index + 1, ':', group.name, 'ID:', group.id);
-        const groupHosts = hosts.filter(h => h.group_id === group.id);
+        const groupHosts = hosts.filter(h => h.group_id === group.id || (!h.group_id && group.id === 0));
         const onlineCount = groupHosts.filter(h => h.status === 'online').length;
         
         const groupCard = document.createElement('div');
@@ -643,12 +643,12 @@ function showGroupsView() {
         groupCard.innerHTML = `
             <div class="group-header">
                 <div class="group-info group-toggle-trigger" data-group-id="${group.id}">
-                    <div class="group-icon" style="background: ${group.color}20; color: ${group.color}">
+                    <div class="group-icon">
                         <i class="fas ${group.icon}"></i>
                     </div>
                     <div class="group-details">
                         <h3>${group.name}</h3>
-                        <p>${group.description || 'No description'}</p>
+                        <p>${group.description}</p>
                     </div>
                 </div>
                 <div class="group-stats group-toggle-trigger" data-group-id="${group.id}">
