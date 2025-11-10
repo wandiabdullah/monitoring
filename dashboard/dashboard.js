@@ -224,17 +224,24 @@ function renderGroups() {
         container.appendChild(ungroupedCard);
     }
     
-    // Restore expanded state after render
-    restoreExpandedState();
-    
-    // If no groups are expanded, expand all groups by default
-    if (expandedGroups.size === 0) {
-        expandAllGroups();
-    }
+    // Use setTimeout to ensure DOM is fully rendered before manipulating classes
+    setTimeout(() => {
+        // Restore expanded state after render
+        restoreExpandedState();
+        
+        // If no groups are expanded, expand all groups by default
+        if (expandedGroups.size === 0) {
+            console.log('[DEBUG] No expanded groups, expanding all by default');
+            expandAllGroups();
+        } else {
+            console.log('[DEBUG] Restored expanded groups:', Array.from(expandedGroups));
+        }
+    }, 0);
 }
 
 // Restore expanded state for groups
 function restoreExpandedState() {
+    console.log('[DEBUG] Restoring expanded state for:', Array.from(expandedGroups));
     expandedGroups.forEach(groupId => {
         const hostsContainer = document.getElementById(`hosts-${groupId}`);
         const toggle = document.getElementById(`toggle-${groupId}`);
@@ -242,23 +249,35 @@ function restoreExpandedState() {
         if (hostsContainer && toggle) {
             hostsContainer.classList.add('expanded');
             toggle.classList.remove('collapsed');
+            console.log('[DEBUG] Restored group:', groupId);
         }
     });
 }
 
 // Expand all groups by default
 function expandAllGroups() {
+    console.log('[DEBUG] Expanding all groups...');
+    
     // Get all group IDs from rendered groups
-    document.querySelectorAll('.group-hosts').forEach(hostsContainer => {
+    const groupContainers = document.querySelectorAll('.group-hosts');
+    console.log('[DEBUG] Found group containers:', groupContainers.length);
+    
+    groupContainers.forEach(hostsContainer => {
         const groupId = hostsContainer.id.replace('hosts-', '');
         const toggle = document.getElementById(`toggle-${groupId}`);
+        
+        console.log('[DEBUG] Processing group:', groupId, hostsContainer, toggle);
         
         if (hostsContainer && toggle) {
             hostsContainer.classList.add('expanded');
             toggle.classList.remove('collapsed');
-            expandedGroups.add(parseInt(groupId) || 0);
+            const numericGroupId = groupId === '0' ? 0 : parseInt(groupId);
+            expandedGroups.add(numericGroupId);
+            console.log('[DEBUG] Expanded group:', groupId);
         }
     });
+    
+    console.log('[DEBUG] All expanded groups:', Array.from(expandedGroups));
 }
 
 // Render hosts in a group
@@ -311,8 +330,13 @@ function renderHosts(hostList) {
 
 // Toggle group expansion
 function toggleGroup(groupId) {
+    console.log('[DEBUG] toggleGroup called with groupId:', groupId);
+    
     const hostsContainer = document.getElementById(`hosts-${groupId}`);
     const toggle = document.getElementById(`toggle-${groupId}`);
+    
+    console.log('[DEBUG] hostsContainer:', hostsContainer);
+    console.log('[DEBUG] toggle:', toggle);
     
     if (!hostsContainer || !toggle) {
         console.error('[ERROR] Group elements not found:', groupId);
@@ -320,14 +344,18 @@ function toggleGroup(groupId) {
     }
     
     if (hostsContainer.classList.contains('expanded')) {
+        console.log('[DEBUG] Collapsing group:', groupId);
         hostsContainer.classList.remove('expanded');
         toggle.classList.add('collapsed');
         expandedGroups.delete(groupId); // Remove from expanded set
     } else {
+        console.log('[DEBUG] Expanding group:', groupId);
         hostsContainer.classList.add('expanded');
         toggle.classList.remove('collapsed');
         expandedGroups.add(groupId); // Add to expanded set
     }
+    
+    console.log('[DEBUG] expandedGroups after toggle:', Array.from(expandedGroups));
 }
 
 // Update statistics
