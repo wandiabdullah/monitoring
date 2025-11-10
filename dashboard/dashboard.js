@@ -88,6 +88,16 @@ function hideAllViews() {
     allViews.forEach(view => {
         view.style.display = 'none';
     });
+    
+    // Also hide specific views that might not have content-view class
+    const alertsView = document.getElementById('alertsView');
+    if (alertsView) alertsView.style.display = 'none';
+    
+    const agentTutorialView = document.getElementById('agentTutorialView');
+    if (agentTutorialView) agentTutorialView.style.display = 'none';
+    
+    const dashboardView = document.getElementById('dashboardView');
+    if (dashboardView) dashboardView.style.display = 'none';
 }
 
 // Save current view to localStorage
@@ -742,19 +752,14 @@ function showDashboardView(skipSave = false) {
         saveCurrentView('dashboard');
     }
     
+    // Hide all views first
+    hideAllViews();
+    
     // Show dashboard view
     const dashboardView = document.getElementById('dashboardView');
     if (dashboardView) {
         dashboardView.style.display = 'block';
     }
-    
-    // Hide all other content views
-    const allViews = document.querySelectorAll('.content-view');
-    allViews.forEach(view => {
-        if (view.id !== 'dashboardView') {
-            view.style.display = 'none';
-        }
-    });
     
     currentView = 'dashboard';
     document.getElementById('pageTitle').textContent = 'Dashboard Overview';
@@ -771,11 +776,8 @@ function showAllHostsView(skipSave = false) {
         saveCurrentView('hosts');
     }
     
-    // Hide all other content views first
-    const allViews = document.querySelectorAll('.content-view');
-    allViews.forEach(view => {
-        view.style.display = 'none';
-    });
+    // Hide all views first
+    hideAllViews();
     
     // Show dashboard view (which contains groupsList)
     const dashboardView = document.getElementById('dashboardView');
@@ -798,11 +800,8 @@ function showGroupsView(skipSave = false) {
         saveCurrentView('groups');
     }
     
-    // Hide all other content views first
-    const allViews = document.querySelectorAll('.content-view');
-    allViews.forEach(view => {
-        view.style.display = 'none';
-    });
+    // Hide all views first
+    hideAllViews();
     
     // Show dashboard view (which contains groupsList)
     const dashboardView = document.getElementById('dashboardView');
@@ -868,11 +867,8 @@ function showSettingsView(skipSave = false) {
         saveCurrentView('settings');
     }
     
-    // Hide all other content views first
-    const allViews = document.querySelectorAll('.content-view');
-    allViews.forEach(view => {
-        view.style.display = 'none';
-    });
+    // Hide all views first
+    hideAllViews();
     
     // Show dashboard view (which contains groupsList)
     const dashboardView = document.getElementById('dashboardView');
@@ -1593,22 +1589,8 @@ function showAlertsView(skipSave = false) {
         saveCurrentView('alerts');
     }
     
-    // Hide dashboard view
-    const dashboardView = document.getElementById('dashboardView');
-    if (dashboardView) {
-        dashboardView.style.display = 'none';
-        console.log('[DEBUG] Dashboard view hidden');
-    }
-    
-    // Hide all other content views
-    const allViews = document.querySelectorAll('.content-view');
-    console.log('[DEBUG] Total content views found:', allViews.length);
-    allViews.forEach(view => {
-        if (view.id !== 'alertsView') {
-            console.log('[DEBUG] Hiding view:', view.id);
-            view.style.display = 'none';
-        }
-    });
+    // Hide all views first
+    hideAllViews();
     
     // Show alerts view
     const alertsView = document.getElementById('alertsView');
