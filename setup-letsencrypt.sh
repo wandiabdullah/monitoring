@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Let's Encrypt SSL Setup Script
+# Let's Encrypt SSL Setup Script - Linux (Improved)
 # This script will obtain and configure SSL certificates from Let's Encrypt
 
 set -e
@@ -8,6 +8,13 @@ set -e
 DOMAIN="eyes.indoinfinite.com"
 EMAIL="admin@indoinfinite.com"  # Change this to your email
 STAGING=0  # Set to 1 for testing with Let's Encrypt staging server
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
 
 echo "=================================================="
 echo "  Let's Encrypt SSL Setup"
@@ -19,7 +26,7 @@ echo ""
 
 # Check if email is still default
 if [ "$EMAIL" = "admin@indoinfinite.com" ]; then
-    echo "⚠️  WARNING: Please change the EMAIL variable in this script to your actual email address"
+    echo -e "${YELLOW}⚠️  WARNING: Please change the EMAIL variable in this script to your actual email address${NC}"
     read -p "Continue anyway? (y/N): " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
