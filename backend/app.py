@@ -1057,11 +1057,16 @@ def test_notification_endpoint():
     """Test notification channel"""
     try:
         data = request.json
+        print(f"[DEBUG] Test notification request: {data}")
+        
         channel_type = data.get('channel_type')
         config = data.get('config')
         
         if not channel_type or not config:
+            print("[ERROR] Missing channel_type or config")
             return jsonify({'error': 'Missing channel_type or config'}), 400
+        
+        print(f"[DEBUG] Testing {channel_type} with config keys: {list(config.keys())}")
         
         test_message = f"""
 Test Alert from Server Monitoring System
@@ -1075,19 +1080,28 @@ Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC
         
         success = False
         if channel_type == 'email':
+            print("[DEBUG] Calling send_email_notification")
             success = alert_system.send_email_notification(config, 'Test Alert', test_message)
         elif channel_type == 'telegram':
+            print("[DEBUG] Calling send_telegram_notification")
             success = alert_system.send_telegram_notification(config, test_message)
         elif channel_type == 'whatsapp':
+            print("[DEBUG] Calling send_whatsapp_notification")
             success = alert_system.send_whatsapp_notification(config, test_message)
         else:
+            print(f"[ERROR] Unknown channel type: {channel_type}")
             return jsonify({'error': f'Unknown channel type: {channel_type}'}), 400
+        
+        print(f"[DEBUG] Notification send result: {success}")
         
         if success:
             return jsonify({'success': True, 'message': f'Test notification sent via {channel_type}'})
         else:
             return jsonify({'success': False, 'error': 'Failed to send test notification'}), 500
     except Exception as e:
+        print(f"[ERROR] Exception in test_notification_endpoint: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/alerts/history', methods=['GET'])

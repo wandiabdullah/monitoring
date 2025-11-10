@@ -1995,7 +1995,17 @@ async function testChannel() {
             body: JSON.stringify({channel_type: type, config: config})
         });
         
+        console.log('[DEBUG] Test response status:', response.status);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('[ERROR] Test failed with status:', response.status, errorText);
+            showToast(`Test failed (${response.status}): ${errorText}`, 'error');
+            return;
+        }
+        
         const result = await response.json();
+        console.log('[DEBUG] Test result:', result);
         
         if (result.success) {
             showToast('Test notification sent successfully! Check your ' + type, 'success');
@@ -2004,7 +2014,7 @@ async function testChannel() {
         }
     } catch (error) {
         console.error('Error testing channel:', error);
-        showToast('Failed to send test notification', 'error');
+        showToast('Failed to send test notification: ' + error.message, 'error');
     }
 }
 
