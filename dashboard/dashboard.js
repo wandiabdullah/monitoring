@@ -226,6 +226,8 @@ function renderGroups() {
     
     // Use setTimeout to ensure DOM is fully rendered before manipulating classes
     setTimeout(() => {
+        console.log('[DEBUG] Starting post-render initialization for Dashboard');
+        
         // Attach click listeners first
         attachGroupToggleListeners();
         
@@ -239,7 +241,9 @@ function renderGroups() {
         } else {
             console.log('[DEBUG] Restored expanded groups:', Array.from(expandedGroups));
         }
-    }, 0);
+        
+        console.log('[DEBUG] Dashboard initialization complete');
+    }, 100);
 }
 
 // Restore expanded state for groups
@@ -707,6 +711,8 @@ function showGroupsView() {
     
     // Use setTimeout to ensure DOM is fully rendered
     setTimeout(() => {
+        console.log('[DEBUG] Starting post-render initialization for Groups view');
+        
         // Attach click listeners to all toggle triggers
         attachGroupToggleListeners();
         
@@ -720,7 +726,9 @@ function showGroupsView() {
         } else {
             console.log('[DEBUG] Restored expanded groups in Groups view:', Array.from(expandedGroups));
         }
-    }, 0);
+        
+        console.log('[DEBUG] Groups view initialization complete');
+    }, 100);
 }
 
 // Attach click listeners for group toggle
@@ -730,25 +738,35 @@ function attachGroupToggleListeners() {
     const triggers = document.querySelectorAll('.group-toggle-trigger');
     console.log('[DEBUG] Found toggle triggers:', triggers.length);
     
-    triggers.forEach(trigger => {
+    triggers.forEach((trigger, index) => {
         const groupId = trigger.getAttribute('data-group-id');
+        console.log('[DEBUG] Processing trigger', index, 'with group ID:', groupId);
         
-        trigger.addEventListener('click', (e) => {
+        // Remove any existing listeners by cloning and replacing
+        const newTrigger = trigger.cloneNode(true);
+        trigger.parentNode.replaceChild(newTrigger, trigger);
+        
+        newTrigger.addEventListener('click', (e) => {
+            console.log('[DEBUG] Click event fired on trigger for group:', groupId);
+            
             // Don't trigger if clicking on action buttons
             if (e.target.closest('.group-actions')) {
+                console.log('[DEBUG] Click was on action button, ignoring');
                 return;
             }
             
-            console.log('[DEBUG] Trigger clicked for group:', groupId);
+            console.log('[DEBUG] Calling toggleGroup for group:', groupId);
             const numericGroupId = groupId === '0' ? 0 : parseInt(groupId);
             toggleGroup(numericGroupId);
         });
         
         // Make it look clickable
-        trigger.style.cursor = 'pointer';
+        newTrigger.style.cursor = 'pointer';
         
-        console.log('[DEBUG] Attached listener to group:', groupId);
+        console.log('[DEBUG] Successfully attached listener to group:', groupId);
     });
+    
+    console.log('[DEBUG] Finished attaching all listeners');
 }
 
 function showSettingsView() {
