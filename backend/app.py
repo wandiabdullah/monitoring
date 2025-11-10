@@ -1066,10 +1066,10 @@ def test_notification_channel_by_id(channel_id):
             print(f"[ERROR] Channel not found: {channel_id}")
             return jsonify({'error': 'Channel not found'}), 404
         
-        channel_type = channel['type']
-        config = channel['config']
+        channel_type = channel['channel_type']  # ← Fixed: was 'type', should be 'channel_type'
+        config = json.loads(channel['config']) if isinstance(channel['config'], str) else channel['config']
         
-        print(f"[DEBUG] Testing {channel_type} channel '{channel.get('name', 'Unnamed')}' with config keys: {list(config.keys())}")
+        print(f"[DEBUG] Testing {channel_type} channel with config keys: {list(config.keys())}")
         
         test_message = f"""
 Test Alert from Server Monitoring System
@@ -1078,7 +1078,6 @@ This is a test notification to verify your {channel_type.upper()} configuration.
 
 If you received this message, your notification channel is working correctly!
 
-Channel: {channel.get('name', 'Unnamed')}
 Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC
         """.strip()
         
