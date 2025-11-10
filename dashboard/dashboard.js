@@ -553,6 +553,21 @@ function toggleSidebar() {
 // View Functions
 function showDashboardView() {
     console.log('[DEBUG] Showing dashboard view');
+    
+    // Show dashboard view
+    const dashboardView = document.getElementById('dashboardView');
+    if (dashboardView) {
+        dashboardView.style.display = 'block';
+    }
+    
+    // Hide all other content views
+    const allViews = document.querySelectorAll('.content-view');
+    allViews.forEach(view => {
+        if (view.id !== 'dashboardView') {
+            view.style.display = 'none';
+        }
+    });
+    
     currentView = 'dashboard';
     document.getElementById('pageTitle').textContent = 'Dashboard Overview';
     renderGroups();
@@ -1496,12 +1511,21 @@ function showAlertsView() {
     console.log('[DEBUG] ========== Showing Alerts View ==========');
     console.log('[DEBUG] Function called at:', new Date().toISOString());
     
-    // Hide all views
+    // Hide dashboard view
+    const dashboardView = document.getElementById('dashboardView');
+    if (dashboardView) {
+        dashboardView.style.display = 'none';
+        console.log('[DEBUG] Dashboard view hidden');
+    }
+    
+    // Hide all other content views
     const allViews = document.querySelectorAll('.content-view');
     console.log('[DEBUG] Total content views found:', allViews.length);
     allViews.forEach(view => {
-        console.log('[DEBUG] Hiding view:', view.id);
-        view.style.display = 'none';
+        if (view.id !== 'alertsView') {
+            console.log('[DEBUG] Hiding view:', view.id);
+            view.style.display = 'none';
+        }
     });
     
     // Show alerts view
