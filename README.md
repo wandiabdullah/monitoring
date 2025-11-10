@@ -2,17 +2,60 @@
 
 Sistem monitoring lengkap untuk server Linux dengan dashboard real-time monitoring CPU, RAM, Disk, dan I/O.
 
-## � Quick Start
+## 🚀 Quick Start
 
-### 1. Start Backend (Docker)
+### Option 1: Production dengan HTTPS (Let's Encrypt)
 
-```bash
-docker-compose -f docker-compose.host.yml up -d
+**Recommended untuk production!**
+
+```powershell
+# 1. Edit email di setup-letsencrypt.ps1
+$EMAIL = "your-email@domain.com"
+
+# 2. Run setup (otomatis dapat SSL + auto-renewal)
+.\setup-letsencrypt.ps1
+
+# 3. Akses via HTTPS
+https://eyes.indoinfinite.com
 ```
 
-### 2. Login ke Dashboard
+✅ SSL certificate valid dari Let's Encrypt  
+✅ Auto-renewal setiap 12 jam  
+✅ No browser warning
 
-Buka browser: `http://localhost` (atau `http://your-server-ip`)
+**Dokumentasi lengkap:** [LETSENCRYPT-GUIDE.md](LETSENCRYPT-GUIDE.md)
+
+---
+
+### Option 2: Development (HTTP)
+
+```bash
+docker-compose up -d
+```
+
+Akses: `http://localhost:5000`
+
+---
+
+## 🔒 SSL/HTTPS Setup
+
+Sistem ini support **Let's Encrypt** dengan auto-renewal:
+
+- 📜 Valid SSL certificate (trusted oleh browser)
+- 🔄 Auto-renewal setiap 12 jam
+- 📧 Email notification jika renewal gagal
+- 🛡️ Modern SSL/TLS security (A+ rating)
+
+**Quick Setup:**
+```powershell
+.\setup-letsencrypt.ps1
+```
+
+Lihat [LETSENCRYPT-GUIDE.md](LETSENCRYPT-GUIDE.md) dan [QUICK-REFERENCE.md](QUICK-REFERENCE.md) untuk detail lengkap.
+
+---
+
+## 🔐 Login ke Dashboard
 
 **Default credentials:**
 - Username: `admin`
@@ -20,18 +63,9 @@ Buka browser: `http://localhost` (atau `http://your-server-ip`)
 
 ⚠️ **Ganti password setelah login pertama!**
 
-### 3. Add Host & Install Agent
-
-1. Login sebagai admin
-2. Buka "Host Management"
-3. Add host baru → Simpan API key
-4. Install agent di Linux server dengan API key tersebut
-
-Lihat [AUTHENTICATION.md](docs/AUTHENTICATION.md) untuk panduan lengkap.
-
 ---
 
-##  Fitur
+## 📋 Fitur
 
 ### 🎨 Modern Dashboard (NEW!)
 - **Sidebar Navigation**: Professional UI dengan menu samping
@@ -44,10 +78,12 @@ Lihat [AUTHENTICATION.md](docs/AUTHENTICATION.md) untuk panduan lengkap.
   - Enhanced security untuk multi-tenant
 - **Real-time Statistics**: Total hosts, online/offline, groups
 - **Responsive Design**: Mobile-friendly interface
+- **Collapsible Sidebar**: Toggle sidebar untuk monitoring space yang lebih besar
 
-### Authentication & Security
-- 🔐 Login system untuk akses dashboard
+### 🔐 Authentication & Security
+- � Login system untuk akses dashboard
 - 👥 User management (Admin & Regular users)
+- 🔑 Account settings (Change email & password)
 - 🔑 API key authentication per host dengan key mapping
 - 🛡️ Session-based security
 - 📝 Audit trail (last_seen tracking)

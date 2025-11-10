@@ -42,12 +42,23 @@ Thumbs.db
 # Logs
 *.log
 logs/
+certbot-logs/
 
 # Data
 backend/data/
 *.jsonl
 *.db
 *.sqlite
+
+# SSL Certificates - NEVER commit these!
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+nginx/nginx-temp.conf
+letsencrypt-backup.tar.gz
+
+# Let's Encrypt
+.well-known/
 
 # Environment variables
 .env
