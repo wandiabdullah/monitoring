@@ -1493,16 +1493,32 @@ function showUserManagement() {
 
 // Show Alerts View
 function showAlertsView() {
-    console.log('[DEBUG] Showing Alerts View');
+    console.log('[DEBUG] ========== Showing Alerts View ==========');
+    console.log('[DEBUG] Function called at:', new Date().toISOString());
     
     // Hide all views
-    document.querySelectorAll('.content-view').forEach(view => view.style.display = 'none');
+    const allViews = document.querySelectorAll('.content-view');
+    console.log('[DEBUG] Total content views found:', allViews.length);
+    allViews.forEach(view => {
+        console.log('[DEBUG] Hiding view:', view.id);
+        view.style.display = 'none';
+    });
     
     // Show alerts view
     const alertsView = document.getElementById('alertsView');
+    console.log('[DEBUG] alertsView element:', alertsView);
+    
     if (alertsView) {
+        console.log('[DEBUG] Setting alertsView display to block');
         alertsView.style.display = 'block';
+        console.log('[DEBUG] alertsView display is now:', alertsView.style.display);
+        
+        console.log('[DEBUG] Calling initializeAlertsView()');
         initializeAlertsView();
+        console.log('[DEBUG] ========== Alerts View Shown ==========');
+    } else {
+        console.error('[ERROR] alertsView element NOT FOUND!');
+        console.error('[ERROR] Please check if id="alertsView" exists in HTML');
     }
 }
 
@@ -2081,23 +2097,41 @@ async function resolveAlert(alertId) {
 
 // Initialize alerts view
 function initializeAlertsView() {
+    console.log('[DEBUG] ========== Initializing Alerts View ==========');
+    
+    console.log('[DEBUG] Loading alert config...');
     loadAlertConfig();
+    
+    console.log('[DEBUG] Loading notification channels...');
     loadNotificationChannels();
+    
+    console.log('[DEBUG] Loading alert stats...');
     loadAlertStats();
+    
+    console.log('[DEBUG] Loading alert history...');
     loadAlertHistory();
     
     // Setup form handlers
+    console.log('[DEBUG] Setting up form handlers...');
     const alertConfigForm = document.getElementById('alertConfigForm');
     if (alertConfigForm) {
+        console.log('[DEBUG] alertConfigForm found, adding submit handler');
         alertConfigForm.removeEventListener('submit', saveAlertConfig);
         alertConfigForm.addEventListener('submit', saveAlertConfig);
+    } else {
+        console.error('[ERROR] alertConfigForm NOT FOUND!');
     }
     
     const channelForm = document.getElementById('channelForm');
     if (channelForm) {
+        console.log('[DEBUG] channelForm found, adding submit handler');
         channelForm.removeEventListener('submit', saveChannel);
         channelForm.addEventListener('submit', saveChannel);
+    } else {
+        console.error('[ERROR] channelForm NOT FOUND!');
     }
+    
+    console.log('[DEBUG] ========== Alerts View Initialized ==========');
 }
 
 // ==================== END ALERT MANAGEMENT ====================

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Alert UI Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Alert UI Debug Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Check Dashboard Files</h2>
+        <button onclick="checkDashboardJS()">Check dashboard.js Loading</button>
+        <button onclick="checkDashboardHTML()">Check dashboard.html</button>
+        <div id="fileCheck"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Check Alert Functions</h2>
+        <button onclick="checkFunctions()">Check Functions Exist</button>
+        <div id="functionCheck"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test API Endpoints</h2>
+        <button onclick="testAPIs()">Test Alert APIs</button>
+        <div id="apiCheck"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Test DOM Elements</h2>
+        <button onclick="checkDOM()">Check Alert View Elements</button>
+        <div id="domCheck"></div>
+    </div>
+
+    <script>
+        async function checkDashboardJS() {
+            const result = document.getElementById('fileCheck');
+            result.innerHTML = 'Checking dashboard.js...<br>';
+            
+            try {
+                const response = await fetch('/static/dashboard.js?v=20251110002');
+                if (response.ok) {
+                    const text = await response.text();
+                    const hasAlertFunctions = text.includes('showAlertsView') && 
+                                             text.includes('initializeAlertsView') &&
+                                             text.includes('loadAlertConfig');
+                    
+                    if (hasAlertFunctions) {
+                        result.innerHTML += '<span class="success">✅ dashboard.js loaded, alert functions found!</span><br>';
+                        result.innerHTML += `File size: ${(text.length / 1024).toFixed(2)} KB<br>`;
+                        result.innerHTML += `Has showAlertsView: ${text.includes('showAlertsView')}<br>`;
+                        result.innerHTML += `Has initializeAlertsView: ${text.includes('initializeAlertsView')}<br>`;
+                        result.innerHTML += `Has loadAlertConfig: ${text.includes('loadAlertConfig')}<br>`;
+                    } else {
+                        result.innerHTML += '<span class="error">❌ dashboard.js loaded but alert functions NOT found!</span><br>';
+                        result.innerHTML += 'Please clear browser cache and refresh!';
+                    }
+                } else {
+                    result.innerHTML += `<span class="error">❌ Failed to load: ${response.status}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML += `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+        
+        async function checkDashboardHTML() {
+            const result = document.getElementById('fileCheck');
+            result.innerHTML = 'Checking dashboard.html...<br>';
+            
+            try {
+                const response = await fetch('/dashboard.html');
+                if (response.ok) {
+                    const text = await response.text();
+                    const hasAlertView = text.includes('id="alertsView"');
+                    const hasAlertMenu = text.includes('data-view="alerts"');
+                    const hasAlertModal = text.includes('id="channelModal"');
+                    
+                    result.innerHTML += `<span class="${hasAlertView ? 'success' : 'error'}">
+                        ${hasAlertView ? '✅' : '❌'} alertsView element: ${hasAlertView}
+                    </span><br>`;
+                    result.innerHTML += `<span class="${hasAlertMenu ? 'success' : 'error'}">
+                        ${hasAlertMenu ? '✅' : '❌'} alerts menu item: ${hasAlertMenu}
+                    </span><br>`;
+                    result.innerHTML += `<span class="${hasAlertModal ? 'success' : 'error'}">
+                        ${hasAlertModal ? '✅' : '❌'} channelModal element: ${hasAlertModal}
+                    </span><br>`;
+                } else {
+                    result.innerHTML += `<span class="error">❌ Failed to load: ${response.status}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML += `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+        
+        function checkFunctions() {
+            const result = document.getElementById('functionCheck');
+            const functions = [
+                'showAlertsView',
+                'initializeAlertsView',
+                'loadAlertConfig',
+                'saveAlertConfig',
+                'loadNotificationChannels',
+                'showAddChannelModal',
+                'closeChannelModal',
+                'testChannel',
+                'loadAlertHistory'
+            ];
+            
+            result.innerHTML = '<strong>Function Check:</strong><br>';
+            functions.forEach(fname => {
+                const exists = typeof window[fname] === 'function';
+                result.innerHTML += `<span class="${exists ? 'success' : 'error'}">
+                    ${exists ? '✅' : '❌'} ${fname}: ${typeof window[fname]}
+                </span><br>`;
+            });
+        }
+        
+        async function testAPIs() {
+            const result = document.getElementById('apiCheck');
+            result.innerHTML = 'Testing API endpoints...<br>';
+            
+            const endpoints = [
+                '/api/alerts/config',
+                '/api/alerts/channels',
+                '/api/alerts/history?limit=5',
+                '/api/alerts/stats'
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint);
+                    const status = response.ok ? '✅' : '❌';
+                    result.innerHTML += `<span class="${response.ok ? 'success' : 'error'}">
+                        ${status} ${endpoint}: ${response.status}
+                    </span><br>`;
+                } catch (error) {
+                    result.innerHTML += `<span class="error">❌ ${endpoint}: ${error.message}</span><br>`;
+                }
+            }
+        }
+        
+        function checkDOM() {
+            const result = document.getElementById('domCheck');
+            const elements = [
+                'alertsView',
+                'alertConfigForm',
+                'channelsList',
+                'alertHistoryList',
+                'channelModal',
+                'alertTotalToday',
+                'alertUnresolved',
+                'alertActiveChannels',
+                'alertSystemStatus'
+            ];
+            
+            result.innerHTML = '<strong>DOM Element Check:</strong><br>';
+            elements.forEach(id => {
+                const exists = document.getElementById(id) !== null;
+                result.innerHTML += `<span class="${exists ? 'success' : 'error'}">
+                    ${exists ? '✅' : '❌'} #${id}: ${exists ? 'Found' : 'NOT FOUND'}
+                </span><br>`;
+            });
+        }
+    </script>
+</body>
+</html>
