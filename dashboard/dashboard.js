@@ -629,10 +629,12 @@ function showGroupsView() {
         return;
     }
     
-    // Reuse renderGroups logic for consistency
+    // Clear container completely before rendering
     container.innerHTML = '';
+    console.log('[DEBUG] Cleared container, rendering', groups.length, 'groups');
     
-    groups.forEach(group => {
+    groups.forEach((group, index) => {
+        console.log('[DEBUG] Rendering group', index + 1, ':', group.name, 'ID:', group.id);
         const groupHosts = hosts.filter(h => h.group_id === group.id);
         const onlineCount = groupHosts.filter(h => h.status === 'online').length;
         
@@ -675,11 +677,15 @@ function showGroupsView() {
         `;
         
         container.appendChild(groupCard);
+        console.log('[DEBUG] Appended group card for:', group.name);
     });
+    
+    console.log('[DEBUG] Finished rendering all groups');
     
     // Add ungrouped hosts
     const ungroupedHosts = hosts.filter(h => !h.group_id);
     if (ungroupedHosts.length > 0) {
+        console.log('[DEBUG] Adding ungrouped hosts:', ungroupedHosts.length);
         const ungroupedCard = document.createElement('div');
         ungroupedCard.className = 'group-card';
         ungroupedCard.innerHTML = `
@@ -742,11 +748,16 @@ function attachGroupToggleListeners() {
         const groupId = trigger.getAttribute('data-group-id');
         console.log('[DEBUG] Processing trigger', index, 'with group ID:', groupId);
         
-        // Remove any existing listeners by cloning and replacing
-        const newTrigger = trigger.cloneNode(true);
-        trigger.parentNode.replaceChild(newTrigger, trigger);
+        // Check if listener already attached
+        if (trigger.dataset.listenerAttached === 'true') {
+            console.log('[DEBUG] Listener already attached to group:', groupId);
+            return;
+        }
         
-        newTrigger.addEventListener('click', (e) => {
+        // Mark as having listener attached
+        trigger.dataset.listenerAttached = 'true';
+        
+        trigger.addEventListener('click', (e) => {
             console.log('[DEBUG] Click event fired on trigger for group:', groupId);
             
             // Don't trigger if clicking on action buttons
@@ -761,7 +772,7 @@ function attachGroupToggleListeners() {
         });
         
         // Make it look clickable
-        newTrigger.style.cursor = 'pointer';
+        trigger.style.cursor = 'pointer';
         
         console.log('[DEBUG] Successfully attached listener to group:', groupId);
     });
