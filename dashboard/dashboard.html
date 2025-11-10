@@ -2193,10 +2193,22 @@
     <!-- Alert Settings View -->
     <div id="alertsView" style="display: none;">
         <!-- Header -->
-        <header class="page-header">
-            <div class="page-title">
+        <header class="header">
+            <div class="header-left">
                 <h1><i class="fas fa-bell"></i> Alert Settings</h1>
-                <p>Configure alert rules and notification channels</p>
+                <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">Configure alert rules and notification channels</p>
+            </div>
+            <div class="header-right">
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showAddChannelModal()">
+                        <i class="fas fa-plus"></i>
+                        Add Channel
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadAlertConfig(); initializeAlertsView();">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -2331,9 +2343,6 @@
         <div class="card">
             <div class="card-header">
                 <h2><i class="fas fa-paper-plane"></i> Notification Channels</h2>
-                <button class="btn btn-primary btn-sm" onclick="showAddChannelModal()">
-                    <i class="fas fa-plus"></i> Add Channel
-                </button>
             </div>
             <div class="card-body">
                 <div id="channelsList">
@@ -2348,9 +2357,6 @@
         <div class="card">
             <div class="card-header">
                 <h2><i class="fas fa-history"></i> Recent Alerts</h2>
-                <button class="btn btn-secondary btn-sm" onclick="loadAlertHistory()">
-                    <i class="fas fa-sync"></i> Refresh
-                </button>
             </div>
             <div class="card-body">
                 <div id="alertHistoryList">
@@ -2968,6 +2974,6 @@ INTERVAL = 30  # Send metrics every 30 seconds</code></pre>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <!-- Load frontend script from Flask static folder to avoid routing conflicts -->
-    <script src="/static/dashboard.js?v=20251110019"></script>
+    <script src="/static/dashboard.js?v=20251110020"></script>
 </body>
 </html>
