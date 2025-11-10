@@ -640,7 +640,8 @@ function showGroupsView() {
         
         const groupCard = document.createElement('div');
         groupCard.className = 'group-card';
-        groupCard.innerHTML = `
+        
+        const htmlContent = `
             <div class="group-header">
                 <div class="group-info group-toggle-trigger" data-group-id="${group.id}">
                     <div class="group-icon">
@@ -675,6 +676,9 @@ function showGroupsView() {
                 ${renderHosts(groupHosts)}
             </div>
         `;
+        
+        groupCard.innerHTML = htmlContent;
+        console.log('[DEBUG] Group HTML for', group.name, ':', htmlContent.substring(0, 200));
         
         container.appendChild(groupCard);
         console.log('[DEBUG] Appended group card for:', group.name);
