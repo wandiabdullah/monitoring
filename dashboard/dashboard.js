@@ -679,8 +679,8 @@ function showGroupsView() {
         const ungroupedCard = document.createElement('div');
         ungroupedCard.className = 'group-card';
         ungroupedCard.innerHTML = `
-            <div class="group-header group-toggle-trigger" data-group-id="0">
-                <div class="group-info">
+            <div class="group-header">
+                <div class="group-info group-toggle-trigger" data-group-id="0">
                     <div class="group-icon">
                         <i class="fas fa-server"></i>
                     </div>
@@ -689,7 +689,7 @@ function showGroupsView() {
                         <p>Hosts without a group</p>
                     </div>
                 </div>
-                <div class="group-stats">
+                <div class="group-stats group-toggle-trigger" data-group-id="0">
                     <div class="group-stat">
                         <div class="number">${ungroupedHosts.length}</div>
                         <div class="label">Hosts</div>
