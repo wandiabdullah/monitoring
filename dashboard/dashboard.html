@@ -1070,9 +1070,11 @@
             </div>
         </header>
 
-        <!-- Content -->
-        <div class="content">
-            <!-- Stats Cards -->
+        <!-- Dashboard View (Default) -->
+        <div id="dashboardView" class="content-view">
+            <!-- Content -->
+            <div class="content">
+                <!-- Stats Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon primary">
@@ -1449,6 +1451,8 @@
                 </div>
             </div>
         </div>
+        </div>
+        <!-- End Dashboard View -->
     </div>
 
     <!-- Alert Settings View -->
@@ -1745,6 +1749,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <!-- Load frontend script from Flask static folder to avoid routing conflicts -->
-    <script src="/static/dashboard.js?v=20251110003"></script>
+    <script src="/static/dashboard.js?v=20251110004"></script>
 </body>
 </html>
