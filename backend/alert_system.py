@@ -255,12 +255,14 @@ def send_email_notification(config, subject, message):
         msg['Subject'] = subject
         
         # Add HTML body
+        # Replace newlines with <br> outside f-string (f-strings can't contain backslashes)
+        message_html = message.replace('\n', '<br>')
         html_body = f"""
         <html>
             <body style="font-family: Arial, sans-serif; padding: 20px;">
                 <h2 style="color: #e53e3e;">🚨 Server Alert</h2>
                 <div style="background: #f7fafc; padding: 15px; border-left: 4px solid #e53e3e; margin: 20px 0;">
-                    {message.replace('\n', '<br>')}
+                    {message_html}
                 </div>
                 <p style="color: #718096; font-size: 12px; margin-top: 30px;">
                     This is an automated message from Server Monitoring System
