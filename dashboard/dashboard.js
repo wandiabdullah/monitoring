@@ -123,6 +123,8 @@ function restoreLastView() {
             showGroupsView(true);
         } else if (lastView === 'alerts') {
             showAlertsView(true);
+        } else if (lastView === 'agent-tutorial') {
+            showAgentTutorialView(true);
         } else if (lastView === 'settings') {
             showSettingsView(true);
         } else {
@@ -493,6 +495,10 @@ function refreshCurrentView() {
             // Don't refresh alerts view (has its own data loading)
             console.log('[DEBUG] Skipping refresh for alerts view');
             break;
+        case 'agent-tutorial':
+            // Don't refresh tutorial view (static content)
+            console.log('[DEBUG] Skipping refresh for agent tutorial view');
+            break;
         default:
             // Don't do anything if view is unknown
             console.log('[DEBUG] Unknown view, skipping refresh');
@@ -606,6 +612,8 @@ function initializeEventListeners() {
                 showAccountSettings();
             } else if (view === 'alerts') {
                 showAlertsView();
+            } else if (view === 'agent-tutorial') {
+                showAgentTutorialView();
             } else if (view === 'users') {
                 showUserManagement();
             } else if (view === 'settings') {
@@ -1620,6 +1628,76 @@ function showAlertsView(skipSave = false) {
     }
 }
 
+// Show Agent Tutorial View
+function showAgentTutorialView(skipSave = false) {
+    console.log('[DEBUG] Showing Agent Tutorial View');
+    
+    // Save current view (unless restoring)
+    if (!skipSave) {
+        saveCurrentView('agent-tutorial');
+    }
+    
+    // Hide all other views
+    hideAllViews();
+    
+    // Show agent tutorial view
+    const tutorialView = document.getElementById('agentTutorialView');
+    if (tutorialView) {
+        tutorialView.style.display = 'block';
+        console.log('[DEBUG] Agent Tutorial View shown');
+    } else {
+        console.error('[ERROR] agentTutorialView element NOT FOUND!');
+    }
+}
+
+// Show specific tutorial tab
+function showTutorialTab(tabName) {
+    console.log('[DEBUG] Switching to tutorial tab:', tabName);
+    
+    // Hide all tabs
+    document.querySelectorAll('.tutorial-tab').forEach(tab => {
+        tab.style.display = 'none';
+    });
+    
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab
+    const selectedTab = document.getElementById(`tutorial-${tabName}`);
+    if (selectedTab) {
+        selectedTab.style.display = 'block';
+    }
+    
+    // Add active class to selected button
+    const selectedBtn = document.getElementById(`tab-${tabName}`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('active');
+    }
+}
+
+// Copy code to clipboard
+function copyCode(button) {
+    const codeBlock = button.nextElementSibling;
+    const code = codeBlock.textContent;
+    
+    navigator.clipboard.writeText(code).then(() => {
+        // Change button text temporarily
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        button.classList.add('copied');
+        
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('copied');
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        showToast('Failed to copy code', 'error');
+    });
+}
+
 // Load all users
 async function loadUsers() {
     const tbody = document.getElementById('userListBody');
@@ -1909,6 +1987,18 @@ function updateWhatsAppForm() {
     document.getElementById('twilioConfig').style.display = provider === 'twilio' ? 'block' : 'none';
 }
 
+// Update SSL checkbox based on port selection
+function updateSslOption() {
+    const port = document.getElementById('smtpPort').value;
+    const useSslCheckbox = document.getElementById('useSsl');
+    
+    if (port === '465') {
+        useSslCheckbox.checked = true;
+    } else if (port === '587' || port === '25') {
+        useSslCheckbox.checked = false;
+    }
+}
+
 // Save notification channel
 async function saveChannel(event) {
     event.preventDefault();
@@ -1929,7 +2019,8 @@ async function saveChannel(event) {
             username: document.getElementById('smtpUsername').value,
             password: document.getElementById('smtpPassword').value,
             from_email: document.getElementById('fromEmail').value,
-            to_emails: toEmails
+            to_emails: toEmails,
+            use_ssl: document.getElementById('useSsl').checked
         };
     } else if (type === 'telegram') {
         config = {
@@ -1998,7 +2089,8 @@ async function testChannel() {
             username: document.getElementById('smtpUsername').value,
             password: document.getElementById('smtpPassword').value,
             from_email: document.getElementById('fromEmail').value,
-            to_emails: toEmails
+            to_emails: toEmails,
+            use_ssl: document.getElementById('useSsl').checked
         };
     } else if (type === 'telegram') {
         config = {
@@ -2298,12 +2390,15 @@ window.showAddChannelModal = showAddChannelModal;
 window.closeChannelModal = closeChannelModal;
 window.updateChannelForm = updateChannelForm;
 window.updateWhatsAppForm = updateWhatsAppForm;
+window.updateSslOption = updateSslOption;
 window.saveChannel = saveChannel;
 window.testChannel = testChannel;
 window.testChannelById = testChannelById;
 window.deleteChannel = deleteChannel;
 window.resolveAlert = resolveAlert;
 window.loadAlertHistory = loadAlertHistory;
+window.showTutorialTab = showTutorialTab;
+window.copyCode = copyCode;
 
 console.log('[DEBUG] All window functions registered:', {
     openModal: typeof window.openModal,

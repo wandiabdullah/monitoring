@@ -243,9 +243,16 @@ def send_email_notification(config, subject, message):
         password = config.get('password')
         from_email = config.get('from_email', username)
         to_emails = config.get('to_emails', [])
+        use_ssl = config.get('use_ssl', False)  # For port 465
+        
+        print(f"[EMAIL] Attempting to send email via {smtp_server}:{smtp_port}")
+        print(f"[EMAIL] From: {from_email}")
+        print(f"[EMAIL] To: {to_emails}")
+        print(f"[EMAIL] Use SSL: {use_ssl}")
         
         if not all([smtp_server, username, password, to_emails]):
             print("[EMAIL] Missing required configuration")
+            print(f"[EMAIL] Config check - Server: {bool(smtp_server)}, User: {bool(username)}, Pass: {bool(password)}, To: {bool(to_emails)}")
             return False
         
         # Create message
@@ -272,16 +279,45 @@ def send_email_notification(config, subject, message):
         """
         msg.attach(MIMEText(html_body, 'html'))
         
-        # Send email
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()
-            server.login(username, password)
-            server.send_message(msg)
+        # Send email based on SSL/TLS configuration
+        if use_ssl or smtp_port == 465:
+            # Use SSL (port 465)
+            print(f"[EMAIL] Connecting with SSL on port {smtp_port}")
+            with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
+                print("[EMAIL] SSL connection established")
+                server.login(username, password)
+                print("[EMAIL] Login successful")
+                server.send_message(msg)
+                print(f"[EMAIL] Message sent successfully to {to_emails}")
+        else:
+            # Use STARTTLS (port 587 or 25)
+            print(f"[EMAIL] Connecting with STARTTLS on port {smtp_port}")
+            with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
+                print("[EMAIL] Connection established")
+                server.ehlo()
+                print("[EMAIL] EHLO sent")
+                server.starttls()
+                print("[EMAIL] STARTTLS successful")
+                server.ehlo()
+                print("[EMAIL] EHLO after STARTTLS sent")
+                server.login(username, password)
+                print("[EMAIL] Login successful")
+                server.send_message(msg)
+                print(f"[EMAIL] Message sent successfully to {to_emails}")
         
-        print(f"[EMAIL] Alert sent to {to_emails}")
+        print(f"[EMAIL] ✅ Alert delivered to {to_emails}")
         return True
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"[EMAIL] ❌ Authentication failed: {e}")
+        print(f"[EMAIL] Check username and password for {smtp_server}")
+        return False
+    except smtplib.SMTPException as e:
+        print(f"[EMAIL] ❌ SMTP error: {e}")
+        return False
     except Exception as e:
-        print(f"[EMAIL] Error sending notification: {e}")
+        print(f"[EMAIL] ❌ Unexpected error: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def send_telegram_notification(config, message):

@@ -1368,6 +1368,313 @@
         .toast.removing {
             animation: slideOut 0.3s ease-out;
         }
+
+        /* Agent Tutorial Styles */
+        .tutorial-container {
+            padding: 20px;
+        }
+
+        .tab-navigation {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: white;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+
+        .tutorial-tab {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tutorial-tab h2 {
+            color: #333;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tutorial-step {
+            margin-bottom: 35px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .tutorial-step h3 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .tutorial-step p {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .tutorial-step ul, .tutorial-step ol {
+            margin-left: 25px;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .tutorial-step li {
+            margin-bottom: 8px;
+        }
+
+        .code-block {
+            position: relative;
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            margin: 0;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .code-block code {
+            color: #d4d4d4;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .copy-btn.copied {
+            background: #28a745;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            color: #0c5460;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .alert-info i {
+            font-size: 20px;
+            margin-top: 2px;
+        }
+
+        .success-text {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .verification-section h2,
+        .troubleshooting-section h2,
+        .resources-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .verification-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .verification-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .verification-item i {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .verification-item strong {
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        .verification-item p {
+            color: #666;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .trouble-item {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .trouble-item h4 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .trouble-item ul {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .trouble-item code {
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            color: #d63384;
+        }
+
+        .resource-card {
+            text-align: center;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .resource-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .resource-card h4 {
+            color: #333;
+            margin: 15px 0 10px;
+            font-size: 16px;
+        }
+
+        .resource-card a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .resource-card a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .tab-navigation {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .tutorial-tab {
+                padding: 20px;
+            }
+
+            .tutorial-step {
+                padding: 15px;
+            }
+
+            .code-block {
+                padding: 15px;
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1413,6 +1720,16 @@
                 <a href="#" class="menu-link" data-view="add-group">
                     <i class="fas fa-folder-plus"></i>
                     <span>Add Group</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="menu-section">Help</div>
+        <ul class="sidebar-menu">
+            <li class="menu-item">
+                <a href="#" class="menu-link" data-view="agent-tutorial">
+                    <i class="fas fa-book"></i>
+                    <span>Agent Installation</span>
                 </a>
             </li>
         </ul>
@@ -2064,11 +2381,24 @@
                         <h3><i class="fas fa-envelope"></i> Email Configuration</h3>
                         <div class="form-group">
                             <label for="smtpServer">SMTP Server</label>
-                            <input type="text" id="smtpServer" placeholder="smtp.gmail.com">
+                            <input type="text" id="smtpServer" placeholder="smtp.gmail.com or smtp.zeptomail.com">
+                            <small>Common servers: smtp.gmail.com, smtp.office365.com, smtp.zeptomail.com</small>
                         </div>
                         <div class="form-group">
                             <label for="smtpPort">SMTP Port</label>
-                            <input type="number" id="smtpPort" value="587">
+                            <select id="smtpPort" onchange="updateSslOption()">
+                                <option value="587">587 (STARTTLS - Recommended)</option>
+                                <option value="465">465 (SSL/TLS)</option>
+                                <option value="25">25 (Plain)</option>
+                            </select>
+                            <small>Port 587 for STARTTLS, 465 for SSL, 25 for plain (not recommended)</small>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="useSsl" style="width: auto; margin-right: 8px;">
+                                Use SSL/TLS (for port 465)
+                            </label>
+                            <small>Check this if using port 465, uncheck for port 587 (STARTTLS)</small>
                         </div>
                         <div class="form-group">
                             <label for="smtpUsername">Username/Email</label>
@@ -2076,8 +2406,8 @@
                         </div>
                         <div class="form-group">
                             <label for="smtpPassword">Password/App Password</label>
-                            <input type="password" id="smtpPassword" placeholder="App Password">
-                            <small><a href="https://myaccount.google.com/apppasswords" target="_blank">Get Gmail App Password</a></small>
+                            <input type="password" id="smtpPassword" placeholder="App Password or SMTP Password">
+                            <small><a href="https://myaccount.google.com/apppasswords" target="_blank">Gmail App Password</a> | <a href="https://www.zeptomail.com/" target="_blank">Zeptomail</a></small>
                         </div>
                         <div class="form-group">
                             <label for="fromEmail">From Email</label>
@@ -2173,6 +2503,431 @@
         </div>
     </div>
 
+    <!-- Agent Installation Tutorial View -->
+    <div id="agentTutorialView" class="view-content" style="display: none;">
+        <div class="view-header">
+            <h1><i class="fas fa-book"></i> Agent Installation Tutorial</h1>
+            <p class="subtitle">Complete guide to install monitoring agent on your servers</p>
+        </div>
+
+        <div class="tutorial-container" style="max-width: 1200px; margin: 0 auto;">
+            <!-- Quick Start Card -->
+            <div class="info-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px;">
+                <h2 style="color: white; margin-bottom: 15px;"><i class="fas fa-rocket"></i> Quick Start</h2>
+                <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                    Install the monitoring agent on your servers to enable real-time monitoring of CPU, memory, disk, network, and processes.
+                </p>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                    <strong>Server URL:</strong> <code style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 4px; margin-left: 10px;">https://eyes.indoinfinite.com</code>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="tab-navigation" style="display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid #e0e0e0;">
+                <button class="tab-btn active" onclick="showTutorialTab('windows')" id="tab-windows">
+                    <i class="fab fa-windows"></i> Windows
+                </button>
+                <button class="tab-btn" onclick="showTutorialTab('linux')" id="tab-linux">
+                    <i class="fab fa-linux"></i> Linux
+                </button>
+                <button class="tab-btn" onclick="showTutorialTab('docker')" id="tab-docker">
+                    <i class="fab fa-docker"></i> Docker
+                </button>
+                <button class="tab-btn" onclick="showTutorialTab('python')" id="tab-python">
+                    <i class="fab fa-python"></i> Python Script
+                </button>
+            </div>
+
+            <!-- Windows Tutorial -->
+            <div id="tutorial-windows" class="tutorial-tab active">
+                <h2><i class="fab fa-windows"></i> Windows Installation</h2>
+                
+                <div class="tutorial-step">
+                    <h3><span class="step-number">1</span> Download Agent</h3>
+                    <p>Download the monitoring agent Python script:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code># Via PowerShell
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/wandiabdullah/monitoring/main/agent/agent.py" -OutFile "agent.py"</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">2</span> Install Python</h3>
+                    <p>Download and install Python 3.8+ from <a href="https://www.python.org/downloads/" target="_blank">python.org</a></p>
+                    <p>Make sure to check "Add Python to PATH" during installation.</p>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">3</span> Install Dependencies</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>pip install requests psutil</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">4</span> Configure Agent</h3>
+                    <p>Edit <code>agent.py</code> and update the server URL:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>SERVER_URL = "https://eyes.indoinfinite.com/api/metrics"</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">5</span> Test Agent</h3>
+                    <p>Run the agent manually to test:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>python agent.py</code></pre>
+                    </div>
+                    <p>You should see: <span class="success-text">✓ Metrics sent successfully</span></p>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">6</span> Run as Windows Service</h3>
+                    <p>Create a batch file <code>start-agent.bat</code>:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>@echo off
+:loop
+python "C:\path\to\agent.py"
+timeout /t 30 /nobreak
+goto loop</code></pre>
+                    </div>
+                    <p>Add to Windows Task Scheduler to run at startup:</p>
+                    <ol>
+                        <li>Open Task Scheduler</li>
+                        <li>Create Basic Task → Name: "Monitoring Agent"</li>
+                        <li>Trigger: "When the computer starts"</li>
+                        <li>Action: "Start a program" → Browse to <code>start-agent.bat</code></li>
+                        <li>Check "Run with highest privileges"</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Linux Tutorial -->
+            <div id="tutorial-linux" class="tutorial-tab" style="display: none;">
+                <h2><i class="fab fa-linux"></i> Linux Installation</h2>
+                
+                <div class="tutorial-step">
+                    <h3><span class="step-number">1</span> Download Agent</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>wget https://raw.githubusercontent.com/wandiabdullah/monitoring/main/agent/agent.py
+# or
+curl -O https://raw.githubusercontent.com/wandiabdullah/monitoring/main/agent/agent.py</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">2</span> Install Dependencies</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code># Ubuntu/Debian
+sudo apt update
+sudo apt install python3 python3-pip -y
+pip3 install requests psutil
+
+# CentOS/RHEL
+sudo yum install python3 python3-pip -y
+pip3 install requests psutil</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">3</span> Configure Agent</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>nano agent.py
+# Update SERVER_URL:
+SERVER_URL = "https://eyes.indoinfinite.com/api/metrics"</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">4</span> Test Agent</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>python3 agent.py</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">5</span> Create Systemd Service</h3>
+                    <p>Create service file:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>sudo nano /etc/systemd/system/monitoring-agent.service</code></pre>
+                    </div>
+                    <p>Add this content:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>[Unit]
+Description=Server Monitoring Agent
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root
+ExecStart=/usr/bin/python3 /root/agent.py
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">6</span> Enable and Start Service</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>sudo systemctl daemon-reload
+sudo systemctl enable monitoring-agent
+sudo systemctl start monitoring-agent
+sudo systemctl status monitoring-agent</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">7</span> Check Logs</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>sudo journalctl -u monitoring-agent -f</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Docker Tutorial -->
+            <div id="tutorial-docker" class="tutorial-tab" style="display: none;">
+                <h2><i class="fab fa-docker"></i> Docker Installation</h2>
+                
+                <div class="tutorial-step">
+                    <h3><span class="step-number">1</span> Create Dockerfile</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies
+RUN pip install --no-cache-dir requests psutil
+
+# Copy agent script
+COPY agent.py .
+
+# Run agent
+CMD ["python", "agent.py"]</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">2</span> Download Agent</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>wget https://raw.githubusercontent.com/wandiabdullah/monitoring/main/agent/agent.py</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">3</span> Update Server URL</h3>
+                    <p>Edit <code>agent.py</code> and set:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>SERVER_URL = "https://eyes.indoinfinite.com/api/metrics"</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">4</span> Build Docker Image</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>docker build -t monitoring-agent .</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">5</span> Run Container</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>docker run -d \
+  --name monitoring-agent \
+  --restart unless-stopped \
+  --network host \
+  monitoring-agent</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">6</span> Check Logs</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>docker logs -f monitoring-agent</code></pre>
+                    </div>
+                </div>
+
+                <div class="alert-info" style="margin-top: 20px;">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> Using <code>--network host</code> allows the agent to collect accurate network statistics.
+                </div>
+            </div>
+
+            <!-- Python Script Tutorial -->
+            <div id="tutorial-python" class="tutorial-tab" style="display: none;">
+                <h2><i class="fab fa-python"></i> Python Script Installation</h2>
+                
+                <div class="tutorial-step">
+                    <h3><span class="step-number">1</span> Requirements</h3>
+                    <ul>
+                        <li>Python 3.8 or higher</li>
+                        <li>pip (Python package manager)</li>
+                        <li>Network access to monitoring server</li>
+                    </ul>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">2</span> Download Agent Script</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code># Download from GitHub
+curl -O https://raw.githubusercontent.com/wandiabdullah/monitoring/main/agent/agent.py
+
+# Or create manually (see full script below)</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">3</span> Install Python Packages</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>pip install requests psutil</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">4</span> Configure Server URL</h3>
+                    <p>Edit the <code>SERVER_URL</code> variable in agent.py:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>SERVER_URL = "https://eyes.indoinfinite.com/api/metrics"
+INTERVAL = 30  # Send metrics every 30 seconds</code></pre>
+                    </div>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">5</span> Run Agent</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>python agent.py</code></pre>
+                    </div>
+                    <p>The agent will run continuously and send metrics every 30 seconds.</p>
+                </div>
+
+                <div class="tutorial-step">
+                    <h3><span class="step-number">6</span> Run in Background</h3>
+                    <p><strong>Linux/Mac:</strong></p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>nohup python agent.py > agent.log 2>&1 &</code></pre>
+                    </div>
+                    <p><strong>Windows (PowerShell):</strong></p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                        <pre><code>Start-Process python -ArgumentList "agent.py" -WindowStyle Hidden</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verification Section -->
+            <div class="verification-section" style="margin-top: 40px; padding: 30px; background: #f8f9fa; border-radius: 12px;">
+                <h2><i class="fas fa-check-circle"></i> Verification</h2>
+                <p>After installing the agent, verify it's working:</p>
+                
+                <div class="verification-steps">
+                    <div class="verification-item">
+                        <i class="fas fa-1"></i>
+                        <div>
+                            <strong>Check Dashboard</strong>
+                            <p>Go to "All Hosts" menu - your server should appear within 30 seconds</p>
+                        </div>
+                    </div>
+                    <div class="verification-item">
+                        <i class="fas fa-2"></i>
+                        <div>
+                            <strong>Check Metrics</strong>
+                            <p>Click on your hostname to see real-time CPU, memory, disk, and network charts</p>
+                        </div>
+                    </div>
+                    <div class="verification-item">
+                        <i class="fas fa-3"></i>
+                        <div>
+                            <strong>Check Agent Logs</strong>
+                            <p>Look for "✓ Metrics sent successfully" messages</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Troubleshooting Section -->
+            <div class="troubleshooting-section" style="margin-top: 30px; padding: 30px; background: #fff3cd; border-radius: 12px;">
+                <h2><i class="fas fa-exclamation-triangle"></i> Troubleshooting</h2>
+                
+                <div class="trouble-item">
+                    <h4>Server not appearing in dashboard?</h4>
+                    <ul>
+                        <li>Check agent is running: <code>ps aux | grep agent.py</code></li>
+                        <li>Verify SERVER_URL is correct</li>
+                        <li>Check network connectivity: <code>curl -I https://eyes.indoinfinite.com</code></li>
+                        <li>Check firewall allows outbound HTTPS (port 443)</li>
+                    </ul>
+                </div>
+
+                <div class="trouble-item">
+                    <h4>Permission errors?</h4>
+                    <ul>
+                        <li>Run agent with appropriate permissions (root/admin for full metrics)</li>
+                        <li>On Linux: <code>sudo python3 agent.py</code></li>
+                        <li>On Windows: Run PowerShell/Command Prompt as Administrator</li>
+                    </ul>
+                </div>
+
+                <div class="trouble-item">
+                    <h4>Import errors?</h4>
+                    <ul>
+                        <li>Verify dependencies: <code>pip list | grep -E "requests|psutil"</code></li>
+                        <li>Reinstall: <code>pip install --upgrade requests psutil</code></li>
+                        <li>Use correct Python version: <code>python --version</code> (should be 3.8+)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Additional Resources -->
+            <div class="resources-section" style="margin-top: 30px; padding: 30px; background: white; border-radius: 12px; border: 2px solid #e0e0e0;">
+                <h2><i class="fas fa-link"></i> Additional Resources</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+                    <div class="resource-card">
+                        <i class="fab fa-github" style="font-size: 32px; color: #333;"></i>
+                        <h4>GitHub Repository</h4>
+                        <a href="https://github.com/wandiabdullah/monitoring" target="_blank">View Source Code</a>
+                    </div>
+                    <div class="resource-card">
+                        <i class="fas fa-book" style="font-size: 32px; color: #667eea;"></i>
+                        <h4>API Documentation</h4>
+                        <a href="https://eyes.indoinfinite.com/api/docs" target="_blank">API Reference</a>
+                    </div>
+                    <div class="resource-card">
+                        <i class="fas fa-question-circle" style="font-size: 32px; color: #17a2b8;"></i>
+                        <h4>Support</h4>
+                        <a href="mailto:support@indoinfinite.com">Contact Support</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     </main>
     <!-- End Main Content -->
 
@@ -2181,6 +2936,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <!-- Load frontend script from Flask static folder to avoid routing conflicts -->
-    <script src="/static/dashboard.js?v=20251110015"></script>
+    <script src="/static/dashboard.js?v=20251110017"></script>
 </body>
 </html>
