@@ -622,39 +622,99 @@ function showGroupsView() {
         return;
     }
     
-    let html = '<div class="groups-management">';
+    // Reuse renderGroups logic for consistency
+    container.innerHTML = '';
     
     groups.forEach(group => {
         const groupHosts = hosts.filter(h => h.group_id === group.id);
+        const onlineCount = groupHosts.filter(h => h.status === 'online').length;
         
-        html += `
-            <div class="group-card">
-                <div class="group-header">
-                    <div class="group-info">
-                        <div class="group-icon" style="background: ${group.color}20; color: ${group.color}">
-                            <i class="fas ${group.icon}"></i>
-                        </div>
-                        <div class="group-details">
-                            <h3>${group.name}</h3>
-                            <p>${group.description || 'No description'}</p>
-                        </div>
+        const groupCard = document.createElement('div');
+        groupCard.className = 'group-card';
+        groupCard.innerHTML = `
+            <div class="group-header">
+                <div class="group-info" onclick="toggleGroup(${group.id})">
+                    <div class="group-icon" style="background: ${group.color}20; color: ${group.color}">
+                        <i class="fas ${group.icon}"></i>
                     </div>
-                    <div class="group-stats">
-                        <div class="group-stat">
-                            <div class="number">${groupHosts.length}</div>
-                            <div class="label">Hosts</div>
-                        </div>
-                        <button class="btn btn-danger" onclick="deleteGroup(${group.id})" style="padding: 8px 16px; font-size: 12px;">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
+                    <div class="group-details">
+                        <h3>${group.name}</h3>
+                        <p>${group.description || 'No description'}</p>
                     </div>
                 </div>
+                <div class="group-stats" onclick="toggleGroup(${group.id})">
+                    <div class="group-stat">
+                        <div class="number">${groupHosts.length}</div>
+                        <div class="label">Hosts</div>
+                    </div>
+                    <div class="group-stat">
+                        <div class="number" style="color: var(--success-color)">${onlineCount}</div>
+                        <div class="label">Online</div>
+                    </div>
+                    <i class="fas fa-chevron-down group-toggle" id="toggle-${group.id}"></i>
+                </div>
+                <div class="group-actions">
+                    <button class="action-btn" onclick="event.stopPropagation(); editGroup(${group.id})" title="Edit Group">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn danger" onclick="event.stopPropagation(); deleteGroup(${group.id}, '${escapeHtml(group.name)}')" title="Delete Group">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="group-hosts" id="hosts-${group.id}">
+                ${renderHosts(groupHosts)}
             </div>
         `;
+        
+        container.appendChild(groupCard);
     });
     
-    html += '</div>';
-    container.innerHTML = html;
+    // Add ungrouped hosts
+    const ungroupedHosts = hosts.filter(h => !h.group_id);
+    if (ungroupedHosts.length > 0) {
+        const ungroupedCard = document.createElement('div');
+        ungroupedCard.className = 'group-card';
+        ungroupedCard.innerHTML = `
+            <div class="group-header" onclick="toggleGroup(0)">
+                <div class="group-info">
+                    <div class="group-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="group-details">
+                        <h3>Ungrouped</h3>
+                        <p>Hosts without a group</p>
+                    </div>
+                </div>
+                <div class="group-stats">
+                    <div class="group-stat">
+                        <div class="number">${ungroupedHosts.length}</div>
+                        <div class="label">Hosts</div>
+                    </div>
+                    <i class="fas fa-chevron-down group-toggle" id="toggle-0"></i>
+                </div>
+            </div>
+            <div class="group-hosts" id="hosts-0">
+                ${renderHosts(ungroupedHosts)}
+            </div>
+        `;
+        
+        container.appendChild(ungroupedCard);
+    }
+    
+    // Use setTimeout to ensure DOM is fully rendered before manipulating classes
+    setTimeout(() => {
+        // Restore expanded state after render
+        restoreExpandedState();
+        
+        // If no groups are expanded, expand all groups by default
+        if (expandedGroups.size === 0) {
+            console.log('[DEBUG] No expanded groups in Groups view, expanding all by default');
+            expandAllGroups();
+        } else {
+            console.log('[DEBUG] Restored expanded groups in Groups view:', Array.from(expandedGroups));
+        }
+    }, 0);
 }
 
 function showSettingsView() {
