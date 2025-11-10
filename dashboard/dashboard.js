@@ -226,6 +226,11 @@ function renderGroups() {
     
     // Restore expanded state after render
     restoreExpandedState();
+    
+    // If no groups are expanded, expand all groups by default
+    if (expandedGroups.size === 0) {
+        expandAllGroups();
+    }
 }
 
 // Restore expanded state for groups
@@ -237,6 +242,21 @@ function restoreExpandedState() {
         if (hostsContainer && toggle) {
             hostsContainer.classList.add('expanded');
             toggle.classList.remove('collapsed');
+        }
+    });
+}
+
+// Expand all groups by default
+function expandAllGroups() {
+    // Get all group IDs from rendered groups
+    document.querySelectorAll('.group-hosts').forEach(hostsContainer => {
+        const groupId = hostsContainer.id.replace('hosts-', '');
+        const toggle = document.getElementById(`toggle-${groupId}`);
+        
+        if (hostsContainer && toggle) {
+            hostsContainer.classList.add('expanded');
+            toggle.classList.remove('collapsed');
+            expandedGroups.add(parseInt(groupId) || 0);
         }
     });
 }
